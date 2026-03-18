@@ -18,6 +18,7 @@ import { getWatchlist, addToWatchlist, removeFromWatchlist } from '@/lib/watchli
 import type { WatchlistItem } from '@/lib/watchlistStorage';
 import { PriceChart } from './PriceChart';
 import { showToast } from '@/components/Toast';
+import { AlertModal } from '@/components/AlertModal';
 
 // ─── 타입 ─────────────────────────────────────────────────────────────────────
 
@@ -128,6 +129,7 @@ interface PriceApiData {
 export function DetailPage({ symbol, assetType }: DetailPageProps): React.ReactElement {
   const router = useRouter();
   const [isWatchlisted, setIsWatchlisted] = useState(false);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [newsError, setNewsError] = useState(false);
   const [apiData, setApiData] = useState<PriceApiData | null>(null);
@@ -328,6 +330,25 @@ export function DetailPage({ symbol, assetType }: DetailPageProps): React.ReactE
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <button
             type="button"
+            onClick={() => setIsAlertOpen(true)}
+            aria-label="가격 알림 설정"
+            style={{
+              minWidth: '44px',
+              minHeight: '44px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '18px',
+              color: '#64748B',
+            }}
+          >
+            🔔
+          </button>
+          <button
+            type="button"
             onClick={() => void handleShare()}
             aria-label="공유"
             style={{
@@ -431,6 +452,17 @@ export function DetailPage({ symbol, assetType }: DetailPageProps): React.ReactE
           <MetricCard label={fourthMetricLabel} value={fourthMetricValue} />
         </div>
       </section>
+
+      {/* ── 알림 모달 ── */}
+      {isAlertOpen && (
+        <AlertModal
+          symbol={symbol}
+          name={instrumentName}
+          type={assetType}
+          currentPrice={currentPrice}
+          onClose={() => setIsAlertOpen(false)}
+        />
+      )}
 
       {/* ── 뉴스 섹션 ── */}
       <section style={{ background: '#F8FAFC', padding: '16px' }}>

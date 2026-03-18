@@ -31,81 +31,14 @@ import type { AssetType } from '@/design-system';
 import { LiveIndicator } from '@/design-system';
 import { getWatchlist, addToWatchlist, removeFromWatchlist } from '@/lib/watchlistStorage';
 import type { WatchlistItem } from '@/lib/watchlistStorage';
+import { EmptyWatchlist } from '@/components/EmptyWatchlist';
 import { decodeWatchlistParam } from '@/lib/shareUrl';
 import {
   MOCK_INDICES,
   MOCK_STOCKS,
   MOCK_COINS,
-  QUICK_ADD_SYMBOLS,
   ALL_MOCK,
 } from '@/data/mockData';
-
-// ─── 관심종목 빈 화면 ─────────────────────────────────────────────────────────
-
-interface WatchlistEmptyProps {
-  onQuickAdd: (item: WatchlistItem) => void;
-}
-
-function WatchlistEmpty({ onQuickAdd }: WatchlistEmptyProps): React.ReactElement {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        padding: '40px 24px 24px',
-        gap: '24px',
-      }}
-    >
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: '32px', marginBottom: '8px' }}>⭐</div>
-        <p style={{ fontSize: '16px', fontWeight: 600, color: '#0F172A', margin: '0 0 4px' }}>
-          관심종목을 추가해보세요
-        </p>
-        <p style={{ fontSize: '13px', color: '#94A3B8', margin: 0 }}>
-          검색하거나 아래 인기 종목을 바로 추가할 수 있어요
-        </p>
-      </div>
-
-      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <p style={{ fontSize: '12px', color: '#94A3B8', margin: '0 0 4px', fontWeight: 500 }}>
-          인기 종목 빠른 추가
-        </p>
-        {QUICK_ADD_SYMBOLS.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => onQuickAdd(item)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '12px 16px',
-              background: '#F8FAFC',
-              border: '1px solid #E2E8F0',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              color: '#0F172A',
-            }}
-          >
-            <span style={{ fontWeight: 500 }}>{item.name}</span>
-            <span
-              style={{
-                fontSize: '11px',
-                color: '#64748B',
-                background: '#E2E8F0',
-                borderRadius: '6px',
-                padding: '2px 8px',
-              }}
-            >
-              {item.type === 'coin' ? '코인' : '주식'} + 추가
-            </span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 // ─── 섹션 헤더 ────────────────────────────────────────────────────────────────
 
@@ -474,7 +407,17 @@ export default function HomePage(): React.ReactElement {
 
           {/* 관심종목 빈 화면 */}
           {showWatchlistEmpty && (
-            <WatchlistEmpty onQuickAdd={handleAddToWatchlist} />
+            <EmptyWatchlist
+              onAddSymbol={(symbol, type) => {
+                const found = ALL_MOCK.find((i) => i.symbol === symbol);
+                void handleAddToWatchlist({
+                  id: symbol,
+                  type,
+                  name: found?.name ?? symbol,
+                  addedAt: Date.now(),
+                });
+              }}
+            />
           )}
 
           {/* 크로스에셋 요약 바 */}

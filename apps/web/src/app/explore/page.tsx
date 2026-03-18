@@ -159,9 +159,10 @@ function FilterTabs({ active, onChange }: FilterTabsProps): React.ReactElement {
 
 interface SectionHeaderProps {
   title: string;
+  count?: number;
 }
 
-function SectionHeader({ title }: SectionHeaderProps): React.ReactElement {
+function SectionHeader({ title, count }: SectionHeaderProps): React.ReactElement {
   return (
     <h2
       style={{
@@ -170,9 +171,26 @@ function SectionHeader({ title }: SectionHeaderProps): React.ReactElement {
         color: '#0F172A',
         margin: 0,
         padding: '20px 16px 8px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
       }}
     >
       {title}
+      {count !== undefined && (
+        <span
+          style={{
+            fontSize: '12px',
+            fontWeight: 500,
+            color: '#64748B',
+            background: '#F1F5F9',
+            borderRadius: '10px',
+            padding: '1px 8px',
+          }}
+        >
+          {count}
+        </span>
+      )}
     </h2>
   );
 }
@@ -390,19 +408,28 @@ export default function ExplorePage(): React.ReactElement {
 
         {/* 급등 TOP5 */}
         <section aria-label="오늘의 급등">
-          <SectionHeader title="🔥 오늘의 급등" />
+          <SectionHeader
+            title="🔥 오늘의 급등"
+            count={filter === 'all' ? gainers.length : gainers.filter(i => i.type === filter).length}
+          />
           <RankList items={gainers} filter={filter} onNavigate={handleNavigate} />
         </section>
 
         {/* 급락 TOP5 */}
         <section aria-label="오늘의 급락">
-          <SectionHeader title="📉 오늘의 급락" />
+          <SectionHeader
+            title="📉 오늘의 급락"
+            count={filter === 'all' ? losers.length : losers.filter(i => i.type === filter).length}
+          />
           <RankList items={losers} filter={filter} onNavigate={handleNavigate} />
         </section>
 
         {/* 거래량 급증 TOP5 */}
         <section aria-label="거래량 급증">
-          <SectionHeader title="📊 거래량 급증" />
+          <SectionHeader
+            title="📊 거래량 급증"
+            count={filter === 'all' ? volumeTop.length : volumeTop.filter(i => i.type === filter).length}
+          />
           <RankList items={volumeTop} showVolume filter={filter} onNavigate={handleNavigate} />
         </section>
       </div>
