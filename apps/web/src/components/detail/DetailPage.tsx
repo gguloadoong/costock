@@ -19,6 +19,7 @@ import type { WatchlistItem } from '@/lib/watchlistStorage';
 import { PriceChart } from './PriceChart';
 import { showToast } from '@/components/Toast';
 import { AlertModal } from '@/components/AlertModal';
+import { HoldingModal } from '@/components/HoldingModal';
 import { PriceChange } from '@/components/PriceChange';
 import { formatKRW, formatVolume } from '@/lib/formatters';
 
@@ -49,6 +50,25 @@ function getNewsCategory(title: string): string | null {
     if (keywords.some((kw) => title.includes(kw))) return label;
   }
   return null;
+}
+
+function getRelatedSymbols(symbol: string, assetType: 'stock' | 'coin'): RelatedSymbol[] {
+  // 정확한 매핑이 있으면 사용
+  if (RELATED_SYMBOLS[symbol]) {
+    return RELATED_SYMBOLS[symbol];
+  }
+
+  // 코인의 경우 심볼에서 KRW- 제거하여 매핑 확인
+  if (assetType === 'coin') {
+    const cleanSymbol = symbol.replace('KRW-', '');
+    if (RELATED_SYMBOLS[cleanSymbol]) {
+      return RELATED_SYMBOLS[cleanSymbol];
+    }
+    return DEFAULT_RELATED_COIN.filter((item) => item.symbol !== cleanSymbol);
+  }
+
+  // 주식의 경우 기본값 반환
+  return DEFAULT_RELATED_STOCK.filter((item) => item.symbol !== symbol);
 }
 
 // ─── Mock 데이터 헬퍼 ─────────────────────────────────────────────────────────
@@ -121,6 +141,51 @@ const COIN_NEWS_FALLBACK_URLS: Record<string, string> = {
   'KRW-ADA': 'https://upbit.com/exchange?code=CRIX.UPBIT.KRW-ADA',
 };
 
+// ─── 관련 종목 추천 데이터 ─────────────────────────────────────────────────
+
+interface RelatedSymbol {
+  symbol: string;
+  name: string;
+  type: 'stock' | 'coin';
+}
+
+const RELATED_SYMBOLS: Record<string, RelatedSymbol[]> = {
+  '005930': [ // 삼성전자
+    { symbol: '000660', name: 'SK하이닉스', type: 'stock' },
+    { symbol: '009150', name: '삼성전기', type: 'stock' },
+    { symbol: '006400', name: '삼성SDI', type: 'stock' },
+  ],
+  'BTC': [
+    { symbol: 'ETH', name: '이더리움', type: 'coin' },
+    { symbol: 'SOL', name: '솔라나', type: 'coin' },
+    { symbol: 'XRP', name: '리플', type: 'coin' },
+  ],
+  'ETH': [
+    { symbol: 'BTC', name: '비트코인', type: 'coin' },
+    { symbol: 'SOL', name: '솔라나', type: 'coin' },
+    { symbol: 'MATIC', name: '폴리곤', type: 'coin' },
+  ],
+  '035420': [ // NAVER
+    { symbol: '035720', name: '카카오', type: 'stock' },
+    { symbol: '036570', name: 'NC소프트', type: 'stock' },
+  ],
+  '035720': [ // 카카오
+    { symbol: '035420', name: 'NAVER', type: 'stock' },
+    { symbol: '323410', name: '카카오뱅크', type: 'stock' },
+  ],
+};
+
+const DEFAULT_RELATED_STOCK: RelatedSymbol[] = [
+  { symbol: '005930', name: '삼성전자', type: 'stock' },
+  { symbol: '000660', name: 'SK하이닉스', type: 'stock' },
+  { symbol: '035420', name: 'NAVER', type: 'stock' },
+];
+
+const DEFAULT_RELATED_COIN: RelatedSymbol[] = [
+  { symbol: 'BTC', name: '비트코인', type: 'coin' },
+  { symbol: 'ETH', name: '이더리움', type: 'coin' },
+  { symbol: 'XRP', name: '리플', type: 'coin' },
+];
 
 function formatPrice(value: number): string {
   return value.toLocaleString('ko-KR');
@@ -139,6 +204,7 @@ export function DetailPage({ symbol, assetType }: DetailPageProps): React.ReactE
   const router = useRouter();
   const [isWatchlisted, setIsWatchlisted] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isHoldingOpen, setIsHoldingOpen] = useState(false);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [newsError, setNewsError] = useState(false);
   const [apiData, setApiData] = useState<PriceApiData | null>(null);
@@ -568,7 +634,79 @@ export function DetailPage({ symbol, assetType }: DetailPageProps): React.ReactE
           </a>
         )}
       </section>
+
+      {/* ── 관련 종목 섹션 ── */}
+      <RelatedSymbolsSection symbol={symbol} assetType={assetType} />
     </div>
+  );
+}
+
+// ─── RelatedSymbolsSection ────────────────────────────────────────────────────
+
+function RelatedSymbolsSection({
+  symbol,
+  assetType,
+}: {
+  symbol: string;
+  assetType: 'stock' | 'coin';
+}): React.ReactElement {
+  const router = useRouter();
+  const relatedSymbols = getRelatedSymbols(symbol, assetType);
+
+  const handleSymbolClick = useCallback(
+    (relatedSymbol: string, relatedAssetType: 'stock' | 'coin') => {
+      router.push(`/detail/${relatedAssetType}/${relatedSymbol}`);
+    },
+    [router]
+  );
+
+  return (
+    <section style={{ padding: '16px' }}>
+      <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#0F172A', margin: '0 0 12px' }}>
+        관련 종목
+      </h3>
+      <div
+        style={{
+          display: 'flex',
+          gap: '8px',
+          overflowX: 'auto',
+          paddingBottom: '8px',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
+        {relatedSymbols.map((item) => (
+          <button
+            key={item.symbol}
+            type="button"
+            onClick={() => handleSymbolClick(item.symbol, item.type)}
+            style={{
+              padding: '8px 12px',
+              background: 'white',
+              border: '1px solid #E2E8F0',
+              borderRadius: '6px',
+              fontSize: '13px',
+              fontWeight: 500,
+              color: '#0F172A',
+              cursor: 'pointer',
+              flexShrink: 0,
+              transition: 'background-color 0.2s, border-color 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              const target = e.currentTarget;
+              target.style.backgroundColor = '#F1F5F9';
+              target.style.borderColor = '#CBD5E1';
+            }}
+            onMouseLeave={(e) => {
+              const target = e.currentTarget;
+              target.style.backgroundColor = 'white';
+              target.style.borderColor = '#E2E8F0';
+            }}
+          >
+            {item.name}
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 

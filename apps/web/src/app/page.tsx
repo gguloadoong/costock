@@ -35,6 +35,7 @@ import { InstrumentListSkeleton } from '@/components/InstrumentListSkeleton';
 import { EmptyWatchlist } from '@/components/EmptyWatchlist';
 import { CrossAssetInsight } from '@/components/CrossAssetInsight';
 import { OnboardingToast } from '@/components/OnboardingToast';
+import { InstallBanner } from '@/components/InstallBanner';
 import { decodeWatchlistParam } from '@/lib/shareUrl';
 import {
   MOCK_INDICES,
@@ -533,6 +534,9 @@ export default function HomePage(): React.ReactElement {
 
       {/* ── 토스트 알림 ── */}
       <Toast />
+
+      {/* ── PWA 설치 배너 (z-40, bottom-20 — Toast와 겹치지 않도록 z-50 미만) ── */}
+      <InstallBanner />
     </>
   );
 }
