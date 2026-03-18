@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { getPriceFromCache, setPriceCache } from '../lib/priceCache'
+import { getPriceFromCache, setPriceCache, getCryptoPricesFromCache } from '../lib/priceCache'
 import { logger } from '../lib/logger'
 
 const CandleQuerySchema = z.object({
@@ -12,6 +12,12 @@ const CandleQuerySchema = z.object({
 })
 
 const LatestPriceQuerySchema = z.object({
+  symbols: z.string().transform((v) => v.split(',')).pipe(
+    z.array(z.string().min(1).max(20)).min(1).max(50)
+  ),
+})
+
+const BatchPriceQuerySchema = z.object({
   symbols: z.string().transform((v) => v.split(',')).pipe(
     z.array(z.string().min(1).max(20)).min(1).max(50)
   ),
@@ -140,6 +146,75 @@ export async function priceRoutes(app: FastifyInstance) {
     })
 
     return reply.send({ data: result, count: result.length })
+  })
+
+  /**
+   * 복수 심볼 현재가 배치 조회
+   * GET /api/v1/prices/batch?symbols=005930,KRW-BTC,KRW-ETH
+   *
+   * - 주식: price:v1:{symbol} (getPriceFromCache)
+   * - 코인 (KRW- 접두사): price:crypto:{symbol} (getCryptoPricesFromCache)
+   * - 캐시 미스 시 mock 가격 반환 (Phase 0)
+   * - 응답: { data: { '005930': { price, changeRate, ... }, 'KRW-BTC': {...} } }
+   */
+  app.get('/batch', async (req, reply) => {
+    const query = BatchPriceQuerySchema.parse(req.query)
+    const { symbols } = query
+
+    const cryptoSymbols = symbols.filter((s) => s.startsWith('KRW-'))
+    const stockSymbols  = symbols.filter((s) => !s.startsWith('KRW-'))
+
+    // 병렬 캐시 조회 (N+1 방지)
+    const [stockCached, cryptoCached] = await Promise.all([
+      stockSymbols.length > 0 ? getPriceFromCache(app.redis, stockSymbols) : Promise.resolve({} as Record<string, unknown>),
+      cryptoSymbols.length > 0 ? getCryptoPricesFromCache(app.redis, cryptoSymbols) : Promise.resolve({} as Record<string, unknown>),
+    ])
+
+    const data: Record<string, {
+      symbol:     string
+      price:      number
+      change:     number | null
+      changeRate: number | null
+      stale:      boolean
+      source:     'cache' | 'mock'
+    }> = {}
+
+    for (const symbol of symbols) {
+      const cached = symbol.startsWith('KRW-')
+        ? (cryptoCached as Record<string, unknown>)[symbol]
+        : stockCached[symbol]
+
+      if (cached !== null && cached !== undefined) {
+        const c = cached as Record<string, unknown>
+        data[symbol] = {
+          symbol,
+          price:      typeof c['price']      === 'number' ? c['price']      : Number(c['price'] ?? 0),
+          change:     typeof c['change']     === 'number' ? c['change']     : null,
+          changeRate: typeof c['changeRate'] === 'number' ? c['changeRate'] : null,
+          stale:      typeof c['stale']      === 'boolean' ? c['stale']     : false,
+          source:     'cache',
+        }
+      } else {
+        // 캐시 미스 — mock 가격 반환 (Phase 0)
+        const basePrice = BASE_PRICES[symbol] ?? 50_000
+        const mockChange     = Math.round((Math.random() - 0.5) * basePrice * 0.02)
+        const mockChangeRate = Math.round((mockChange / basePrice) * 10_000) / 100
+
+        data[symbol] = {
+          symbol,
+          price:      basePrice,
+          change:     mockChange,
+          changeRate: mockChangeRate,
+          stale:      false,
+          source:     'mock',
+        }
+
+        logger.debug({ symbol }, '배치 조회 캐시 미스 — mock 반환')
+      }
+    }
+
+    reply.header('X-Data-Source', Object.values(data).every((d) => d.source === 'cache') ? 'cache' : 'mixed')
+    return reply.send({ data, count: symbols.length })
   })
 
   /**
