@@ -19,6 +19,7 @@ import { Box } from '@coinbase/cds-web/layout';
 import { Text } from '@coinbase/cds-web/typography';
 import { ChangeBadge } from '../ChangeBadge/ChangeBadge';
 import { PriceDisplay } from '../PriceDisplay/PriceDisplay';
+import { Sparkline } from '../Sparkline/Sparkline';
 import { formatPrice } from '../../utils/formatPrice';
 import { getAssetBadgeStyle, getAssetBadgeLabel } from '../../utils/assetBadge';
 import type { AssetType } from '../../utils/assetBadge';
@@ -50,6 +51,8 @@ export interface PriceCardProps {
   onWatchlistToggle?: () => void;
   /** Whether this instrument is in the watchlist */
   isWatchlisted?: boolean;
+  /** Sparkline data points for mini chart (7 points recommended) */
+  sparklineData?: number[];
   /** Additional CSS classes */
   className?: string;
 }
@@ -73,6 +76,7 @@ export function PriceCard({
   onClick,
   onWatchlistToggle,
   isWatchlisted = false,
+  sparklineData,
   className = '',
 }: PriceCardProps): React.ReactElement {
   const direction = getDirection(changeRate);
@@ -197,8 +201,8 @@ export function PriceCard({
         <span>{exchange}</span>
       </div>
 
-      {/* Price row */}
-      <div style={{ marginTop: '2px' }}>
+      {/* Price row with optional sparkline */}
+      <div style={{ marginTop: '2px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
         <PriceDisplay
           price={price}
           decimals={decimals}
@@ -206,6 +210,14 @@ export function PriceCard({
           size="xl"
           aria-label={`${name} 현재가`}
         />
+        {sparklineData && sparklineData.length >= 2 && (
+          <Sparkline
+            data={sparklineData}
+            width={64}
+            height={24}
+            ariaLabel={`${name} 가격 추이`}
+          />
+        )}
       </div>
 
       {/* Change row */}

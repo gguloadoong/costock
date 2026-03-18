@@ -25,6 +25,7 @@ import { Toast, showToast } from '@/components/Toast';
 import { TabBar } from '@/components/TabBar';
 import { InstrumentList } from '@/components/InstrumentList';
 import { PullToRefresh } from '@/components/PullToRefresh';
+import { PriceTicker } from '@/components/PriceTicker';
 import { usePriceStream } from '@/hooks/usePriceStream';
 import type { HomeTab, MarketIndex, InstrumentWithPrice } from '@/types/market';
 import type { AssetType } from '@/design-system';
@@ -409,6 +410,16 @@ export default function HomePage(): React.ReactElement {
       </header>
 
       <PullToRefresh onRefresh={handleRefresh}>
+        {/* ── 실시간 가격 티커 ── */}
+        <PriceTicker
+          items={marketIndices.map((idx) => ({
+            symbol: idx.id,
+            name: idx.name,
+            price: idx.value,
+            changeRate: idx.changeRate,
+          }))}
+        />
+
         {/* ── 시장 지수 바 ── */}
         <MarketIndexBar
           indices={marketIndices}

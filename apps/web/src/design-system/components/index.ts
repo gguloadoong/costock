@@ -17,3 +17,6 @@ export type { LiveIndicatorProps, LiveStatus } from './LiveIndicator/LiveIndicat
 
 export { Skeleton, PriceCardSkeleton } from './Skeleton/Skeleton';
 export type { SkeletonProps } from './Skeleton/Skeleton';
+
+export { Sparkline } from './Sparkline/Sparkline';
+export type { SparklineProps } from './Sparkline/Sparkline';
