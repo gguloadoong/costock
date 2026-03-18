@@ -23,6 +23,8 @@ import { formatRate } from '@/design-system/utils/formatRate';
 import { getAlerts, removeAlert } from '@/lib/alertStorage';
 import type { PriceAlert } from '@/lib/alertStorage';
 import { useNotification } from '@/lib/useNotification';
+import { getHoldings, removeHolding, calcPnL } from '@/lib/holdingStorage';
+import type { Holding } from '@/lib/holdingStorage';
 
 // ─── 관심종목 현황 요약 카드 ──────────────────────────────────────────────────
 
@@ -322,6 +324,7 @@ export default function MyPage(): React.ReactElement {
   const [loaded, setLoaded] = useState(false);
   const [copied, setCopied] = useState(false);
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
+  const [holdings, setHoldings] = useState<Holding[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -334,6 +337,10 @@ export default function MyPage(): React.ReactElement {
 
   useEffect(() => {
     setAlerts(getAlerts().filter((a) => !a.triggered));
+  }, []);
+
+  useEffect(() => {
+    setHoldings(getHoldings());
   }, []);
 
   const streamSymbols = useMemo(() => items.map((i) => i.id), [items]);
@@ -349,6 +356,15 @@ export default function MyPage(): React.ReactElement {
     const fallCount = rates.filter((r) => r < 0).length;
     return { avgRate, riseCount, fallCount };
   }, [loaded, items, liveData]);
+
+  const handleRemoveHolding = useCallback((symbol: string) => {
+    removeHolding(symbol);
+    setHoldings((prev) => {
+      const removed = prev.find((h) => h.symbol === symbol);
+      if (removed) showToast({ text: `${removed.name} 보유 종목이 삭제되었습니다`, type: 'warning' });
+      return prev.filter((h) => h.symbol !== symbol);
+    });
+  }, []);
 
   const handleRemove = useCallback(async (id: string) => {
     await removeFromWatchlist(id);
