@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-18T05:36:15.016Z",
+  "updatedAt": "2026-03-18T05:40:06.921Z",
   "missions": [
     {
       "id": "session:0ed25095-73ee-4062-b2f6-88020bcf6403:none",
@@ -7,7 +7,7 @@
       "name": "none",
       "objective": "Session mission",
       "createdAt": "2026-03-18T04:19:43.835Z",
-      "updatedAt": "2026-03-18T05:36:15.016Z",
+      "updatedAt": "2026-03-18T05:40:06.921Z",
       "status": "running",
       "workerCount": 22,
       "taskCounts": {
@@ -27,7 +27,7 @@
           "currentStep": null,
           "latestUpdate": "completed",
           "completedSummary": null,
-          "updatedAt": "2026-03-18T04:47:37.516Z"
+          "updatedAt": "2026-03-18T05:40:06.921Z"
         },
         {
           "name": "이준혁:a59e052",
@@ -280,6 +280,14 @@
           "agent": "executor:ac7ecdd",
           "detail": "completed",
           "sourceKey": "session-stop:ac7ecddc44546cf45"
+        },
+        {
+          "id": "session-stop:a238e06c9f460bea9:2026-03-18T05:40:06.921Z",
+          "at": "2026-03-18T05:40:06.921Z",
+          "kind": "completion",
+          "agent": "executor:aef7c96",
+          "detail": "completed",
+          "sourceKey": "session-stop:a238e06c9f460bea9"
         }
       ]
     }

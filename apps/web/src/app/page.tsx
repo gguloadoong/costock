@@ -24,9 +24,11 @@ import { SearchBar } from '@/components/SearchBar';
 import { Toast, showToast } from '@/components/Toast';
 import { TabBar } from '@/components/TabBar';
 import { InstrumentList } from '@/components/InstrumentList';
+import { PullToRefresh } from '@/components/PullToRefresh';
 import { usePriceStream } from '@/hooks/usePriceStream';
 import type { HomeTab, MarketIndex, InstrumentWithPrice } from '@/types/market';
 import type { AssetType } from '@/design-system';
+import { LiveIndicator } from '@/design-system';
 import { getWatchlist, addToWatchlist, removeFromWatchlist } from '@/lib/watchlistStorage';
 import type { WatchlistItem } from '@/lib/watchlistStorage';
 import { decodeWatchlistParam } from '@/lib/shareUrl';
@@ -303,12 +305,38 @@ export default function HomePage(): React.ReactElement {
   // WebSocket 실시간 스트림
   const { prices: liveData, status: liveStatus } = usePriceStream(streamSymbols);
 
-  // 탭 전환은 React 18 useTransition으로 부드럽게 처리
+  // 탭 전환은 React 18 useTransition으로 부드럽게 처리 + 스크롤 최상단
   const handleTabChange = (tab: HomeTab) => {
-    startTransition(() => {
-      setActiveTab(tab);
-    });
+    startTransition(() => setActiveTab(tab));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // PullToRefresh: 관심종목 + 시장 지수 재로드
+  const handleRefresh = useCallback(async () => {
+    const items = await getWatchlist();
+    setWatchlistItems(items);
+    try {
+      const res = await fetch('/api/v1/market/indices');
+      if (res.ok) {
+        const json = (await res.json()) as {
+          data: {
+            kospi: { value: number; change: number; changeRate: number };
+            kosdaq: { value: number; change: number; changeRate: number };
+            btcDominance: { value: number; change: number; changeRate: number };
+          };
+        };
+        const { kospi, kosdaq, btcDominance } = json.data;
+        const indices: MarketIndex[] = [
+          { id: 'kospi', name: 'KOSPI', value: kospi.value, change: kospi.change, changeRate: kospi.changeRate, status: 'open', type: 'stock' },
+          { id: 'kosdaq', name: 'KOSDAQ', value: kosdaq.value, change: kosdaq.change, changeRate: kosdaq.changeRate, status: 'open', type: 'stock' },
+          { id: 'btc_dom', name: 'BTC 도미넌스', value: btcDominance.value, change: btcDominance.change, changeRate: btcDominance.changeRate, status: 'open', type: 'coin' },
+          MOCK_INDICES[2],
+          MOCK_INDICES[3],
+        ];
+        setMarketIndices(indices);
+      }
+    } catch { /* 무시 */ }
+  }, []);
 
   // 관심종목 추가 (검색 결과 또는 온보딩 퀵 추가)
   const handleAddToWatchlist = useCallback(async (item: WatchlistItem) => {
@@ -414,70 +442,75 @@ export default function HomePage(): React.ReactElement {
               placeholder="종목·코인 검색"
             />
           </div>
+
+          {/* 실시간 연결 상태 */}
+          <LiveIndicator status={liveStatus} showLabel={false} />
         </div>
       </header>
 
-      {/* ── 시장 지수 바 ── */}
-      <MarketIndexBar
-        indices={marketIndices}
-        isLoading={isIndicesLoading}
-        liveStatus={liveStatus}
-      />
-
-      {/* ── 종목 섹션 ── */}
-      <section aria-label="종목 목록">
-        <SectionHeader
-          title={activeTab === 'stock' ? '국내 주식' : activeTab === 'coin' ? '코인' : '관심종목'}
-          subtitle={
-            activeTab === 'stock'
-              ? '코스피·코스닥 상위'
-              : activeTab === 'coin'
-              ? '업비트 거래대금 상위'
-              : undefined
-          }
+      <PullToRefresh onRefresh={handleRefresh}>
+        {/* ── 시장 지수 바 ── */}
+        <MarketIndexBar
+          indices={marketIndices}
+          isLoading={isIndicesLoading}
+          liveStatus={liveStatus}
         />
 
-        {/* 탭 바 */}
-        <TabBar activeTab={activeTab} onChange={handleTabChange} />
-
-        {/* 관심종목 빈 화면 */}
-        {showWatchlistEmpty && (
-          <WatchlistEmpty onQuickAdd={handleAddToWatchlist} />
-        )}
-
-        {/* 크로스에셋 요약 바 */}
-        {!showWatchlistEmpty && activeTab === 'watchlist' && watchlistInstruments.length > 0 && (
-          <CrossAssetBar instruments={watchlistInstruments} liveData={liveData} />
-        )}
-
-        {/* 종목 목록 */}
-        {!showWatchlistEmpty && (
-          <InstrumentList
-            instruments={activeInstruments}
-            liveData={liveData}
-            isLoading={activeTab === 'watchlist' && !watchlistLoaded}
-            tabId={activeTab}
-            onSelect={(symbol) => {
-              const found = watchlistInstruments.find((i) => i.symbol === symbol)
-                ?? ALL_MOCK.find((i) => i.symbol === symbol);
-              if (found) {
-                router.push(`/${found.type === 'coin' ? 'coin' : 'stock'}/${found.symbol}`);
-              }
-            }}
-            watchlistIds={watchlistIds}
-            onWatchlistToggle={(item) => {
-              if (watchlistIds.has(item.symbol)) {
-                void removeFromWatchlist(item.symbol).then(() => {
-                  setWatchlistItems((prev) => prev.filter((w) => w.id !== item.symbol));
-                  showToast({ text: `${item.name} 관심종목 제거`, type: 'warning' });
-                });
-              } else {
-                void handleAddToWatchlist({ id: item.symbol, type: item.type, name: item.name, addedAt: 0 });
-              }
-            }}
+        {/* ── 종목 섹션 ── */}
+        <section aria-label="종목 목록">
+          <SectionHeader
+            title={activeTab === 'stock' ? '국내 주식' : activeTab === 'coin' ? '코인' : '관심종목'}
+            subtitle={
+              activeTab === 'stock'
+                ? '코스피·코스닥 상위'
+                : activeTab === 'coin'
+                ? '업비트 거래대금 상위'
+                : undefined
+            }
           />
-        )}
-      </section>
+
+          {/* 탭 바 */}
+          <TabBar activeTab={activeTab} onChange={handleTabChange} watchlistCount={watchlistItems.length} />
+
+          {/* 관심종목 빈 화면 */}
+          {showWatchlistEmpty && (
+            <WatchlistEmpty onQuickAdd={handleAddToWatchlist} />
+          )}
+
+          {/* 크로스에셋 요약 바 */}
+          {!showWatchlistEmpty && activeTab === 'watchlist' && watchlistInstruments.length > 0 && (
+            <CrossAssetBar instruments={watchlistInstruments} liveData={liveData} />
+          )}
+
+          {/* 종목 목록 */}
+          {!showWatchlistEmpty && (
+            <InstrumentList
+              instruments={activeInstruments}
+              liveData={liveData}
+              isLoading={activeTab === 'watchlist' && !watchlistLoaded}
+              tabId={activeTab}
+              onSelect={(symbol) => {
+                const found = watchlistInstruments.find((i) => i.symbol === symbol)
+                  ?? ALL_MOCK.find((i) => i.symbol === symbol);
+                if (found) {
+                  router.push(`/${found.type === 'coin' ? 'coin' : 'stock'}/${found.symbol}`);
+                }
+              }}
+              watchlistIds={watchlistIds}
+              onWatchlistToggle={(item) => {
+                if (watchlistIds.has(item.symbol)) {
+                  void removeFromWatchlist(item.symbol).then(() => {
+                    setWatchlistItems((prev) => prev.filter((w) => w.id !== item.symbol));
+                    showToast({ text: `${item.name} 관심종목 제거`, type: 'warning' });
+                  });
+                } else {
+                  void handleAddToWatchlist({ id: item.symbol, type: item.type, name: item.name, addedAt: 0 });
+                }
+              }}
+            />
+          )}
+        </section>
+      </PullToRefresh>
 
       {/* ── 하단 네비게이션 ── */}
       <BottomNavigation />

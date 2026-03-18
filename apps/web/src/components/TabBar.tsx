@@ -9,9 +9,10 @@ const TAB_ORDER: HomeTab[] = ['watchlist', 'stock', 'coin'];
 export interface TabBarProps {
   activeTab: HomeTab;
   onChange: (tab: HomeTab) => void;
+  watchlistCount?: number;
 }
 
-export function TabBar({ activeTab, onChange }: TabBarProps): React.ReactElement {
+export function TabBar({ activeTab, onChange, watchlistCount }: TabBarProps): React.ReactElement {
   return (
     <div
       style={{
@@ -25,6 +26,9 @@ export function TabBar({ activeTab, onChange }: TabBarProps): React.ReactElement
     >
       {TAB_ORDER.map((tab) => {
         const isActive = activeTab === tab;
+        const label = tab === 'watchlist' && watchlistCount !== undefined && watchlistCount > 0
+          ? `${HOME_TAB_LABELS[tab]} ${watchlistCount}`
+          : HOME_TAB_LABELS[tab];
         return (
           <button
             key={tab}
@@ -44,7 +48,7 @@ export function TabBar({ activeTab, onChange }: TabBarProps): React.ReactElement
             }}
             onClick={() => onChange(tab)}
           >
-            {HOME_TAB_LABELS[tab]}
+            {label}
             {/* 활성 탭 인디케이터 */}
             {isActive && (
               <span
