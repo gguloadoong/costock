@@ -216,7 +216,161 @@ Authorization: Bearer <JWT>
 
 ---
 
-## 8. Rate Limiting
+## 8. 배치 가격 조회 (Batch Price)
+
+### 복수 종목 현재가 배치 조회
+```
+GET /v1/prices/batch?symbols={comma-separated}
+```
+
+**응답**
+```json
+{
+  "data": {
+    "005930": {
+      "symbol": "005930",
+      "price": 85400,
+      "change": 1200,
+      "changeRate": 1.43,
+      "stale": false,
+      "source": "cache"
+    },
+    "KRW-BTC": {
+      "symbol": "KRW-BTC",
+      "price": 142850000,
+      "change": -1285000,
+      "changeRate": -0.89,
+      "stale": false,
+      "source": "cache"
+    }
+  },
+  "count": 2
+}
+```
+
+**특성**
+- 최대 50개 종목 동시 조회
+- 주식/코인 구분 캐싱 (KRW- 접두사는 코인)
+- 캐시 미스 시 mock 가격 반환 (Phase 0)
+- X-Data-Source 헤더: 'cache' | 'mixed'
+
+---
+
+## 9. 시장 지수 (Market Indices)
+
+### 시장 지수 조회
+```
+GET /api/v1/market/indices
+```
+
+**응답**
+```json
+{
+  "data": {
+    "kospi": {
+      "value": 2834.56,
+      "change": 12.34,
+      "changeRate": 0.44
+    },
+    "kosdaq": {
+      "value": 854.23,
+      "change": -3.21,
+      "changeRate": -0.37
+    },
+    "btcDominance": {
+      "value": 52.3,
+      "change": 0.8,
+      "changeRate": 1.55
+    }
+  },
+  "updatedAt": "2026-03-18T09:35:00Z",
+  "source": "mock"
+}
+```
+
+**특성**
+- KOSPI/KOSDAQ: Phase 0에서는 mock 데이터 (KIS API 미승인)
+- BTC 도미넌스: CoinGecko API 실시간 조회 (TTL 300초)
+- API 호출 타임아웃: 5초
+
+---
+
+## 10. 뉴스 (News)
+
+### 뉴스 조회
+```
+GET /api/v1/news?symbols={comma-separated}&category={stock|crypto|all}&page={cursor}&limit={int}
+```
+
+**응답**
+```json
+{
+  "data": [
+    {
+      "id": "news-001",
+      "title": "삼성전자, AI 반도체 신규 수주 계약 체결",
+      "source": "한국경제",
+      "url": "https://...",
+      "publishedAt": "2026-03-18T08:30:00Z",
+      "relatedSymbols": ["005930", "000660"],
+      "category": "stock"
+    }
+  ],
+  "meta": {
+    "nextCursor": "eyJpZCI6Im5ld3MtMDUwIn0="
+  }
+}
+```
+
+**특성**
+- category 파라미터로 주식/코인/전체 필터링
+- Cursor 기반 페이지네이션
+- 최대 50개 뉴스 조회 (limit)
+
+---
+
+## 11. 헬스체크 (Health Check)
+
+### 서버 상태 조회
+```
+GET /health
+```
+
+**응답**
+```json
+{
+  "status": "ok",
+  "timestamp": "2026-03-18T09:35:00Z",
+  "version": "0.1.0",
+  "services": {
+    "database": "ok",
+    "redis": "ok"
+  }
+}
+```
+
+또는 일부 서비스 장애 시:
+```json
+{
+  "status": "degraded",
+  "timestamp": "2026-03-18T09:35:00Z",
+  "version": "0.1.0",
+  "services": {
+    "database": "error",
+    "redis": "ok"
+  }
+}
+```
+
+**특성**
+- 로드밸런서 타겟 그룹 헬스체크용
+- database, redis 상태 체크
+- 응답: 'ok' (모두 정상) | 'degraded' (일부 장애)
+- X-Request-Log 헤더 미포함 (logLevel: silent)
+
+---
+
+## 12. Rate Limiting
 | 엔드포인트 | 제한 | 초과 시 |
 |-----------|------|--------|
 | 검색 API | 30 req/min | 429 |

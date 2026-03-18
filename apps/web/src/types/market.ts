@@ -77,6 +77,10 @@ export type WsOutboundMessage = WsSubscribeMessage | WsUnsubscribeMessage;
 export interface SearchResult extends Instrument {
   /** 검색어 매칭 하이라이트용 원본 쿼리 */
   matchedQuery: string;
+  /** 현재 가격 (없으면 표시 생략) */
+  price?: number;
+  /** 변동률 % (없으면 표시 생략) */
+  changeRate?: number;
 }
 
 export interface RecentSearch {

@@ -109,7 +109,18 @@ interface ResultItemProps {
   id: string;
 }
 
+function getExchangeLabel(item: SearchResult): string {
+  if (item.type === 'coin') return '업비트';
+  if (item.exchange === 'KOSPI' || item.exchange === 'KOSDAQ') {
+    return item.exchange === 'KOSPI' ? '코스피' : '코스닥';
+  }
+  return item.exchange ?? '';
+}
+
 function ResultItem({ item, isActive, onSelect, id }: ResultItemProps): React.ReactElement {
+  const isCoin = item.type === 'coin';
+  const exchangeLabel = getExchangeLabel(item);
+
   return (
     <button
       id={id}
@@ -117,7 +128,6 @@ function ResultItem({ item, isActive, onSelect, id }: ResultItemProps): React.Re
         width: '100%',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
         gap: '12px',
         padding: '12px 16px',
         background: isActive ? '#F1F5F9' : 'transparent',
@@ -129,24 +139,78 @@ function ResultItem({ item, isActive, onSelect, id }: ResultItemProps): React.Re
       role="option"
       aria-selected={isActive}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
-        <span
-          style={{
-            fontSize: '14px',
-            fontWeight: 600,
-            color: '#0F172A',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {item.name}
-        </span>
+      {/* 아이콘 */}
+      <div
+        style={{
+          flexShrink: 0,
+          width: '32px',
+          height: '32px',
+          borderRadius: '50%',
+          background: isCoin ? '#FFF7ED' : '#EFF6FF',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '15px',
+        }}
+        aria-hidden="true"
+      >
+        {isCoin ? '🪙' : '🏢'}
+      </div>
+
+      {/* 이름 + 심볼·거래소 */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+          <span
+            style={{
+              fontSize: '14px',
+              fontWeight: 600,
+              color: '#0F172A',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {item.name}
+          </span>
+          {/* 타입 배지 */}
+          <span
+            style={{
+              flexShrink: 0,
+              padding: '1px 5px',
+              borderRadius: '4px',
+              fontSize: '11px',
+              fontWeight: 600,
+              background: isCoin ? '#FED7AA' : '#BFDBFE',
+              color: isCoin ? '#C2410C' : '#1D4ED8',
+            }}
+            aria-label={`자산 유형: ${isCoin ? '코인' : '주식'}`}
+          >
+            {isCoin ? '코' : '주'}
+          </span>
+        </div>
         <span style={{ fontSize: '12px', fontFamily: 'Menlo, Consolas, monospace', color: '#64748B' }}>
-          {item.symbol}
+          {item.symbol}{exchangeLabel ? ` · ${exchangeLabel}` : ''}
         </span>
       </div>
-      <AssetBadge type={item.type} />
+
+      {/* 가격 + 변동률 */}
+      {item.price !== undefined && (
+        <div style={{ flexShrink: 0, textAlign: 'right' }}>
+          <div style={{ fontSize: '13px', fontWeight: 500, color: '#0F172A' }}>
+            {item.price.toLocaleString()}
+          </div>
+          {item.changeRate !== undefined && (
+            <div
+              style={{
+                fontSize: '12px',
+                color: item.changeRate >= 0 ? '#E84040' : '#2563EB',
+              }}
+            >
+              {item.changeRate >= 0 ? '+' : ''}{item.changeRate.toFixed(2)}%
+            </div>
+          )}
+        </div>
+      )}
     </button>
   );
 }
@@ -349,15 +413,26 @@ export function SearchBar({
         setResults([]);
         return;
       }
-      const json = (await res.json()) as { data: Array<{ symbol: string; name: string; assetType: string; exchange: string }> } | SearchResult[];
+      type RawItem = {
+        symbol: string;
+        name: string;
+        assetType?: string;
+        type?: string;
+        exchange?: string;
+        price?: number;
+        changeRate?: number;
+      };
+      const json = (await res.json()) as { data: RawItem[] } | RawItem[];
       // API v1 returns { data, meta } — unwrap and normalize assetType → type
-      const raw = Array.isArray(json) ? json : (json as { data: Array<{ symbol: string; name: string; assetType: string; exchange: string }> }).data;
-      const normalized: SearchResult[] = (raw as Array<{ symbol: string; name: string; assetType: string; exchange: string; type?: AssetType }>).map((item) => ({
+      const raw: RawItem[] = Array.isArray(json) ? json : (json as { data: RawItem[] }).data;
+      const normalized: SearchResult[] = raw.map((item) => ({
         symbol: item.symbol,
         name: item.name,
-        type: (item.type ?? (item.assetType === 'crypto' ? 'coin' : 'stock')) as AssetType,
+        type: ((item.type ?? (item.assetType === 'crypto' ? 'coin' : 'stock')) as AssetType),
         exchange: item.exchange ?? '',
         matchedQuery: q,
+        ...(item.price !== undefined ? { price: item.price } : {}),
+        ...(item.changeRate !== undefined ? { changeRate: item.changeRate } : {}),
       }));
       setResults(normalized);
       setActiveIndex(-1);
