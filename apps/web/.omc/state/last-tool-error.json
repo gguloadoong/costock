@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"cd /Users/bong/CoStock && git status 2>&1 | head -5 && git remote -v 2>&1 && ls -la .git 2>/dev/null | head -3\",\"description\":\"Check git state\"}",
+  "error": "Exit code 128\nfatal: not a git repository (or any of the parent directories): .git\nfatal: not a git repository (or any of the parent directories): .git",
+  "timestamp": "2026-03-18T05:35:40.139Z",
+  "retry_count": 1
+}

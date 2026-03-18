@@ -1,0 +1,188 @@
+version: '3.9'
+
+# CoStock Phase 0 — 로컬 개발 환경
+# 실행: docker compose up -d
+# 종료: docker compose down -v
+
+services:
+  # ─────────────────────────────────────────────
+  # PostgreSQL + TimescaleDB
+  # ─────────────────────────────────────────────
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: costock-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: costock
+      POSTGRES_PASSWORD: costock_dev_pw   # 로컬 전용, 절대 프로덕션 금지
+      POSTGRES_DB: costock_dev
+      TIMESCALEDB_TELEMETRY: 'off'
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/docker/postgres/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U costock -d costock_dev']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ─────────────────────────────────────────────
+  # Redis 7 Cluster (로컬에서는 standalone)
+  # ─────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: costock-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --save 60 1
+      --loglevel warning
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ─────────────────────────────────────────────
+  # Zookeeper (Kafka 의존)
+  # ─────────────────────────────────────────────
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: costock-zookeeper
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_logs:/var/lib/zookeeper/log
+
+  # ─────────────────────────────────────────────
+  # Apache Kafka (단일 브로커 — 로컬 개발용)
+  # 프로덕션은 3-broker MSK 클러스터 사용
+  # ─────────────────────────────────────────────
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: costock-kafka
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    ports:
+      - '9092:9092'
+      - '9101:9101'  # JMX
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'  # 토픽은 스크립트로 명시 생성
+      KAFKA_LOG_RETENTION_HOURS: 24
+      KAFKA_MESSAGE_MAX_BYTES: 1048576  # 1MB
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ['CMD', 'kafka-broker-api-versions', '--bootstrap-server', 'localhost:9092']
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  # ─────────────────────────────────────────────
+  # Kafka UI (개발 편의용 — 프로덕션 미사용)
+  # http://localhost:8080
+  # ─────────────────────────────────────────────
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: costock-kafka-ui
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - '8080:8080'
+    environment:
+      KAFKA_CLUSTERS_0_NAME: costock-local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+
+  # ─────────────────────────────────────────────
+  # Kafka 토픽 초기화 (one-shot)
+  # ─────────────────────────────────────────────
+  kafka-init:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: costock-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ['/bin/sh', '-c']
+    command: |
+      "
+      echo '=== CoStock Kafka 토픽 생성 중 ==='
+
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists \
+        --topic stock.raw --partitions 10 --replication-factor 1 \
+        --config retention.ms=3600000
+
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists \
+        --topic crypto.raw --partitions 10 --replication-factor 1 \
+        --config retention.ms=3600000
+
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists \
+        --topic price.validated --partitions 20 --replication-factor 1 \
+        --config retention.ms=86400000
+
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists \
+        --topic price.anomaly --partitions 3 --replication-factor 1 \
+        --config retention.ms=604800000
+
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists \
+        --topic portfolio.updates --partitions 5 --replication-factor 1 \
+        --config retention.ms=86400000
+
+      echo '=== 토픽 목록 ==='
+      kafka-topics --bootstrap-server kafka:29092 --list
+      echo '=== 완료 ==='
+      "
+
+  # ─────────────────────────────────────────────
+  # pgAdmin (DB 관리 UI — 선택 사항)
+  # http://localhost:5050  /  admin@costock.dev / admin
+  # ─────────────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: costock-pgadmin
+    restart: unless-stopped
+    profiles:
+      - tools  # docker compose --profile tools up 으로만 실행
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '5050:80'
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@costock.dev
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+volumes:
+  postgres_data:
+  redis_data:
+  kafka_data:
+  zookeeper_data:
+  zookeeper_logs:
+  pgadmin_data:
+
+networks:
+  default:
+    name: costock-network

@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"ls /Users/bong/costock/apps/api/*.env* /Users/bong/costock/apps/api/.env* 2>/dev/null; ls /Users/bong/costock/*.env* /Users/bong/costock/.env* 2>/dev/null\",\"description\":\"Find .env files\"}",
+  "error": "Exit code 1\n(eval):1: no matches found: /Users/bong/costock/apps/api/*.env*\n(eval):1: no matches found: /Users/bong/costock/*.env*",
+  "timestamp": "2026-03-17T19:57:24.392Z",
+  "retry_count": 1
+}

@@ -1,0 +1,120 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1773805293718,
+  "projectRoot": "/Users/bong/CoStock/apps/api",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "fastify",
+        "version": "4.26.2",
+        "category": "backend"
+      },
+      {
+        "name": "vitest",
+        "version": "1.2.2",
+        "category": "testing"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "npm run build",
+    "testCommand": "npm test",
+    "lintCommand": "npm run lint",
+    "devCommand": "npm run dev",
+    "scripts": {
+      "dev": "tsx watch src/index.ts",
+      "build": "tsc --project tsconfig.json",
+      "start": "node dist/index.js",
+      "test": "vitest run",
+      "test:watch": "vitest",
+      "lint": "eslint src --ext .ts",
+      "typecheck": "tsc --noEmit"
+    }
+  },
+  "conventions": {
+    "namingStyle": "camelCase",
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "src"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 1,
+      "lastAccessed": 1773805293707,
+      "keyFiles": [
+        "index.ts"
+      ]
+    },
+    "src/lib": {
+      "path": "src/lib",
+      "purpose": "Library code",
+      "fileCount": 3,
+      "lastAccessed": 1773805293707,
+      "keyFiles": [
+        "hantooToken.ts",
+        "logger.ts",
+        "priceCache.ts"
+      ]
+    },
+    "src/middleware": {
+      "path": "src/middleware",
+      "purpose": "Middleware",
+      "fileCount": 1,
+      "lastAccessed": 1773805293709,
+      "keyFiles": [
+        "errorHandler.ts"
+      ]
+    },
+    "src/routes": {
+      "path": "src/routes",
+      "purpose": "Route handlers",
+      "fileCount": 6,
+      "lastAccessed": 1773805293711,
+      "keyFiles": [
+        "auth.ts",
+        "portfolio.ts",
+        "price.ts"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": ".env",
+      "accessCount": 2,
+      "lastAccessed": 1773805715474,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

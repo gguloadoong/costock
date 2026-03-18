@@ -1,0 +1,342 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1773809258030,
+  "projectRoot": "/Users/bong/CoStock/apps/web",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "next",
+        "version": "14.1.0",
+        "category": "fullstack"
+      },
+      {
+        "name": "react",
+        "version": "18.2.0",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "18.2.0",
+        "category": "frontend"
+      },
+      {
+        "name": "vitest",
+        "version": "1.2.2",
+        "category": "testing"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "npm run build",
+    "testCommand": "npm test",
+    "lintCommand": "npm run lint",
+    "devCommand": "npm run dev",
+    "scripts": {
+      "dev": "next dev -p 3100",
+      "build": "next build",
+      "start": "next start",
+      "lint": "next lint",
+      "typecheck": "tsc --noEmit",
+      "test": "vitest run",
+      "test:watch": "vitest"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": "type-based"
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "src"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1773809258018,
+      "keyFiles": []
+    },
+    "src/app": {
+      "path": "src/app",
+      "purpose": "Application code",
+      "fileCount": 4,
+      "lastAccessed": 1773809258018,
+      "keyFiles": [
+        "globals.css",
+        "layout.tsx",
+        "page.tsx"
+      ]
+    },
+    "src/components": {
+      "path": "src/components",
+      "purpose": "UI components",
+      "fileCount": 4,
+      "lastAccessed": 1773809258021,
+      "keyFiles": [
+        "BottomNavigation.tsx",
+        "MarketIndexBar.tsx",
+        "SearchBar.tsx"
+      ]
+    },
+    "src/lib": {
+      "path": "src/lib",
+      "purpose": "Library code",
+      "fileCount": 2,
+      "lastAccessed": 1773809258021,
+      "keyFiles": [
+        "shareUrl.ts",
+        "watchlistStorage.ts"
+      ]
+    },
+    "src/types": {
+      "path": "src/types",
+      "purpose": "Type definitions",
+      "fileCount": 1,
+      "lastAccessed": 1773809258021,
+      "keyFiles": [
+        "market.ts"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "src/app/page.tsx",
+      "accessCount": 43,
+      "lastAccessed": 1773812164334,
+      "type": "file"
+    },
+    {
+      "path": "src/components/detail/DetailPage.tsx",
+      "accessCount": 22,
+      "lastAccessed": 1773811979725,
+      "type": "file"
+    },
+    {
+      "path": "src/components/SearchBar.tsx",
+      "accessCount": 9,
+      "lastAccessed": 1773811861417,
+      "type": "file"
+    },
+    {
+      "path": "src/app/layout.tsx",
+      "accessCount": 8,
+      "lastAccessed": 1773812164078,
+      "type": "file"
+    },
+    {
+      "path": "src/app/my/page.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1773811778772,
+      "type": "file"
+    },
+    {
+      "path": "src/lib/watchlistStorage.ts",
+      "accessCount": 5,
+      "lastAccessed": 1773811473228,
+      "type": "file"
+    },
+    {
+      "path": "",
+      "accessCount": 5,
+      "lastAccessed": 1773811927448,
+      "type": "directory"
+    },
+    {
+      "path": "src/design-system/components/PriceCard/PriceCard.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1773810037338,
+      "type": "file"
+    },
+    {
+      "path": "src/app/explore/page.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1773811860737,
+      "type": "file"
+    },
+    {
+      "path": "src/types/market.ts",
+      "accessCount": 4,
+      "lastAccessed": 1773811944401,
+      "type": "file"
+    },
+    {
+      "path": "src/components/detail/PriceChart.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1773811610504,
+      "type": "file"
+    },
+    {
+      "path": "src/hooks/usePriceStream.ts",
+      "accessCount": 3,
+      "lastAccessed": 1773811743343,
+      "type": "file"
+    },
+    {
+      "path": "src/app/globals.css",
+      "accessCount": 3,
+      "lastAccessed": 1773811903052,
+      "type": "file"
+    },
+    {
+      "path": "src/app/providers.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1773809285609,
+      "type": "directory"
+    },
+    {
+      "path": "src/lib/shareUrl.ts",
+      "accessCount": 2,
+      "lastAccessed": 1773810032704,
+      "type": "file"
+    },
+    {
+      "path": "src/components/Toast.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1773810033114,
+      "type": "file"
+    },
+    {
+      "path": "src",
+      "accessCount": 2,
+      "lastAccessed": 1773811727094,
+      "type": "directory"
+    },
+    {
+      "path": "src/design-system",
+      "accessCount": 1,
+      "lastAccessed": 1773810002682,
+      "type": "directory"
+    },
+    {
+      "path": "src/design-system/components/index.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773810007722,
+      "type": "file"
+    },
+    {
+      "path": "src/design-system/index.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773810007842,
+      "type": "file"
+    },
+    {
+      "path": "src/components/BottomNavigation.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773810027965,
+      "type": "file"
+    },
+    {
+      "path": "src/app/stock/[symbol]/page.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773810050847,
+      "type": "file"
+    },
+    {
+      "path": "src/app/coin/[symbol]/page.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773810051877,
+      "type": "file"
+    },
+    {
+      "path": "src/app/market/page.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773810117267,
+      "type": "file"
+    },
+    {
+      "path": "src/app/manifest.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773811532169,
+      "type": "file"
+    },
+    {
+      "path": "public/icon.svg",
+      "accessCount": 1,
+      "lastAccessed": 1773811533709,
+      "type": "file"
+    },
+    {
+      "path": "src/design-system/utils/formatPrice.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773811742963,
+      "type": "file"
+    },
+    {
+      "path": "src/design-system/utils/formatRate.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773811743080,
+      "type": "file"
+    },
+    {
+      "path": "src/components/PullToRefresh.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773811919951,
+      "type": "file"
+    },
+    {
+      "path": "public/sw.js",
+      "accessCount": 1,
+      "lastAccessed": 1773811939448,
+      "type": "file"
+    },
+    {
+      "path": "src/components/ServiceWorkerRegistrar.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773811944197,
+      "type": "file"
+    },
+    {
+      "path": "src/data/mockData.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773811968100,
+      "type": "file"
+    },
+    {
+      "path": "src/components/TabBar.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773811972855,
+      "type": "file"
+    },
+    {
+      "path": "src/components/InstrumentList.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773811984321,
+      "type": "file"
+    },
+    {
+      "path": ".env.example",
+      "accessCount": 1,
+      "lastAccessed": 1773812165235,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
