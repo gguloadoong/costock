@@ -9,6 +9,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Providers } from './providers';
 import { ServiceWorkerRegistrar } from '@/components/ServiceWorkerRegistrar';
+import { OfflineBanner } from '@/components/OfflineBanner';
 
 export const metadata: Metadata = {
   title: {
@@ -71,6 +72,7 @@ export default function RootLayout({
     <html lang="ko">
       <body style={{ background: '#F8FAFC', margin: 0, padding: 0 }}>
         <ServiceWorkerRegistrar />
+        <OfflineBanner />
         <Providers>
           {/* 모바일 중앙 정렬 컨테이너 */}
           <div

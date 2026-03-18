@@ -496,6 +496,169 @@ export default function MyPage(): React.ReactElement {
           )}
         </section>
 
+        {/* 보유 종목 섹션 */}
+        <section aria-label="보유 종목">
+          <SectionHeader title={`💼 보유 종목 (${holdings.length}개)`} />
+          {holdings.length === 0 ? (
+            <div
+              style={{
+                background: 'white',
+                borderRadius: '16px',
+                margin: '0 16px 8px',
+                padding: '32px 16px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <span style={{ fontSize: '32px' }}>💼</span>
+              <p style={{ fontSize: '14px', color: '#64748B', margin: 0, textAlign: 'center' }}>
+                보유 종목을 등록하면 수익률을 확인할 수 있어요
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* 총 투자금액 합계 */}
+              {(() => {
+                const totalInvest = holdings.reduce((sum, h) => sum + h.avgPrice * h.quantity, 0);
+                const totalCurrent = holdings.reduce((sum, h) => {
+                  const live = liveData.get(h.symbol);
+                  const price = live?.price ?? h.avgPrice;
+                  return sum + price * h.quantity;
+                }, 0);
+                const totalPnl = totalCurrent - totalInvest;
+                const totalPnlRate = totalInvest > 0 ? (totalPnl / totalInvest) * 100 : 0;
+                const pnlColor = totalPnl > 0 ? '#E84040' : totalPnl < 0 ? '#2563EB' : '#6B7280';
+                return (
+                  <div
+                    style={{
+                      background: 'white',
+                      borderRadius: '16px',
+                      margin: '0 16px 8px',
+                      padding: '16px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div>
+                      <p style={{ fontSize: '12px', color: '#94A3B8', margin: '0 0 4px', fontWeight: 500 }}>
+                        총 투자금액
+                      </p>
+                      <span style={{ fontSize: '18px', fontWeight: 700, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>
+                        {totalInvest.toLocaleString()}원
+                      </span>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ fontSize: '12px', color: '#94A3B8', margin: '0 0 4px', fontWeight: 500 }}>
+                        평가손익
+                      </p>
+                      <span style={{ fontSize: '18px', fontWeight: 700, color: pnlColor, fontVariantNumeric: 'tabular-nums' }}>
+                        {totalPnl >= 0 ? '+' : ''}{totalPnl.toLocaleString()}원
+                      </span>
+                      <span style={{ fontSize: '12px', fontWeight: 500, color: pnlColor, marginLeft: '6px', fontVariantNumeric: 'tabular-nums' }}>
+                        ({totalPnlRate >= 0 ? '+' : ''}{totalPnlRate.toFixed(2)}%)
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* 보유 종목 카드 목록 */}
+              <div
+                style={{
+                  background: 'white',
+                  borderRadius: '16px',
+                  margin: '0 16px 8px',
+                  overflow: 'hidden',
+                }}
+              >
+                {holdings.map((holding, idx) => {
+                  const live = liveData.get(holding.symbol);
+                  const currentPrice = live?.price ?? holding.avgPrice;
+                  const { pnl, pnlRate, totalValue, investValue } = calcPnL(holding, currentPrice);
+                  const pnlColor = pnl > 0 ? '#E84040' : pnl < 0 ? '#2563EB' : '#6B7280';
+                  const isLast = idx === holdings.length - 1;
+                  return (
+                    <div
+                      key={holding.symbol}
+                      style={{
+                        padding: '14px 16px',
+                        borderBottom: isLast ? 'none' : '1px solid #F1F5F9',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                      }}
+                    >
+                      {/* 종목 정보 */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '14px', fontWeight: 500, color: '#0F172A' }}>
+                            {holding.name}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '10px',
+                              color: holding.type === 'coin' ? '#7C3AED' : '#0369A1',
+                              background: holding.type === 'coin' ? '#EDE9FE' : '#E0F2FE',
+                              borderRadius: '6px',
+                              padding: '2px 8px',
+                              fontWeight: 500,
+                              flexShrink: 0,
+                            }}
+                          >
+                            {holding.type === 'coin' ? '코인' : '주식'}
+                          </span>
+                        </div>
+                        <span style={{ fontSize: '12px', color: '#94A3B8', fontVariantNumeric: 'tabular-nums' }}>
+                          {holding.quantity.toLocaleString()}주 · 매수가 {holding.avgPrice.toLocaleString()}원
+                        </span>
+                      </div>
+
+                      {/* 수익 정보 */}
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>
+                          {totalValue.toLocaleString()}원
+                        </div>
+                        <div style={{ fontSize: '11px', fontWeight: 500, color: pnlColor, fontVariantNumeric: 'tabular-nums' }}>
+                          {pnl >= 0 ? '+' : ''}{pnl.toLocaleString()}원 ({pnlRate >= 0 ? '+' : ''}{pnlRate.toFixed(2)}%)
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#94A3B8', fontVariantNumeric: 'tabular-nums' }}>
+                          투자 {investValue.toLocaleString()}원
+                        </div>
+                      </div>
+
+                      {/* 삭제 버튼 */}
+                      <button
+                        onClick={() => handleRemoveHolding(holding.symbol)}
+                        aria-label={`${holding.name} 보유 종목 삭제`}
+                        style={{
+                          width: '28px',
+                          height: '28px',
+                          borderRadius: '50%',
+                          border: 'none',
+                          background: '#F1F5F9',
+                          color: '#94A3B8',
+                          fontSize: '16px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          lineHeight: 1,
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </section>
+
         {/* 가격 알림 섹션 */}
         <section aria-label="가격 알림 목록">
           <SectionHeader title={`🔔 가격 알림 (${alerts.length}개)`} />

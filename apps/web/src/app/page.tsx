@@ -33,6 +33,7 @@ import { getWatchlist, addToWatchlist, removeFromWatchlist } from '@/lib/watchli
 import type { WatchlistItem } from '@/lib/watchlistStorage';
 import { EmptyWatchlist } from '@/components/EmptyWatchlist';
 import { CrossAssetInsight } from '@/components/CrossAssetInsight';
+import { OnboardingToast } from '@/components/OnboardingToast';
 import { decodeWatchlistParam } from '@/lib/shareUrl';
 import {
   MOCK_INDICES,
@@ -402,6 +403,9 @@ export default function HomePage(): React.ReactElement {
                 : undefined
             }
           />
+
+          {/* 온보딩 토스트 */}
+          <OnboardingToast />
 
           {/* 탭 바 */}
           <TabBar activeTab={activeTab} onChange={handleTabChange} watchlistCount={watchlistItems.length} />

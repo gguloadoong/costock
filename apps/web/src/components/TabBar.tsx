@@ -10,9 +10,10 @@ export interface TabBarProps {
   activeTab: HomeTab;
   onChange: (tab: HomeTab) => void;
   watchlistCount?: number;
+  exploreStats?: { gainers: number; losers: number };
 }
 
-export function TabBar({ activeTab, onChange, watchlistCount }: TabBarProps): React.ReactElement {
+export function TabBar({ activeTab, onChange, watchlistCount, exploreStats }: TabBarProps): React.ReactElement {
   return (
     <div
       style={{
@@ -45,10 +46,28 @@ export function TabBar({ activeTab, onChange, watchlistCount }: TabBarProps): Re
               border: 'none',
               cursor: 'pointer',
               color: isActive ? '#0F172A' : '#94A3B8',
+              transform: isActive ? 'scale(1.1)' : 'scale(1)',
+              transition: 'transform 0.15s ease',
             }}
             onClick={() => onChange(tab)}
           >
             {label}
+            {/* 탐색 탭 실시간 상승/하락 표시 */}
+            {tab === 'stock' && !isActive && exploreStats && (
+              <span
+                style={{
+                  display: 'block',
+                  fontSize: '10px',
+                  lineHeight: 1,
+                  marginTop: '2px',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                <span style={{ color: 'var(--kr-rise, #E84040)' }}>▲{exploreStats.gainers}</span>
+                {' '}
+                <span style={{ color: 'var(--kr-fall, #2563EB)' }}>▼{exploreStats.losers}</span>
+              </span>
+            )}
             {/* 활성 탭 인디케이터 */}
             {isActive && (
               <span
