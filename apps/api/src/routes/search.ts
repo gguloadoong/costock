@@ -18,6 +18,7 @@ interface Instrument {
 }
 
 interface SearchResult extends Instrument {
+  market: string
   currentPrice?: number
   changeRate?: number
   exchange: string
@@ -49,6 +50,7 @@ const KRX_STOCKS: Instrument[] = [
   { symbol: '034730', name: 'SK', assetType: 'stock', exchange: 'KOSPI' },
   { symbol: '017670', name: 'SK텔레콤', assetType: 'stock', exchange: 'KOSPI' },
   { symbol: '086790', name: '하나금융지주', assetType: 'stock', exchange: 'KOSPI' },
+  { symbol: '316140', name: '우리금융지주', assetType: 'stock', exchange: 'KOSPI' },
   { symbol: '003490', name: '대한항공', assetType: 'stock', exchange: 'KOSPI' },
   { symbol: '032830', name: '삼성생명', assetType: 'stock', exchange: 'KOSPI' },
   { symbol: '011200', name: 'HMM', assetType: 'stock', exchange: 'KOSPI' },
@@ -167,6 +169,7 @@ export async function searchRoutes(app: FastifyInstance) {
       symbol: item.symbol,
       name: item.name,
       assetType: item.assetType,
+      market: item.exchange,
       exchange: item.exchange,
     }))
 

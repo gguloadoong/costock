@@ -17,8 +17,146 @@ import { getWatchlist, removeFromWatchlist } from '@/lib/watchlistStorage';
 import type { WatchlistItem } from '@/lib/watchlistStorage';
 import { buildShareUrl } from '@/lib/shareUrl';
 import { usePriceStream } from '@/hooks/usePriceStream';
+import type { PriceData } from '@/types/market';
 import { formatPriceSafe } from '@/design-system/utils/formatPrice';
 import { formatRate } from '@/design-system/utils/formatRate';
+import { getAlerts, removeAlert } from '@/lib/alertStorage';
+import type { PriceAlert } from '@/lib/alertStorage';
+
+// ─── 관심종목 현황 요약 카드 ──────────────────────────────────────────────────
+
+interface WatchlistSummaryProps {
+  liveData: Map<string, PriceData>;
+  items: WatchlistItem[];
+}
+
+function WatchlistSummaryCard({ liveData, items }: WatchlistSummaryProps): React.ReactElement | null {
+  if (items.length === 0) return null;
+
+  let rise = 0;
+  let fall = 0;
+  let flat = 0;
+  let rateSum = 0;
+  let rateCount = 0;
+
+  for (const item of items) {
+    const live = liveData.get(item.id);
+    const rate = live?.changeRate;
+    if (rate === undefined) continue;
+    rateSum += rate;
+    rateCount += 1;
+    if (rate > 0) rise += 1;
+    else if (rate < 0) fall += 1;
+    else flat += 1;
+  }
+
+  const avgRate = rateCount > 0 ? rateSum / rateCount : undefined;
+
+  const avgColor =
+    avgRate === undefined
+      ? '#6B7280'
+      : avgRate > 0
+      ? '#E84040'
+      : avgRate < 0
+      ? '#2563EB'
+      : '#6B7280';
+
+  const avgDisplay =
+    avgRate === undefined
+      ? '—'
+      : `${avgRate >= 0 ? '+' : ''}${avgRate.toFixed(2)}%`;
+
+  return (
+    <div
+      style={{
+        background: 'white',
+        borderRadius: '16px',
+        margin: '0 16px 8px',
+        padding: '16px',
+      }}
+    >
+      <p
+        style={{
+          fontSize: '12px',
+          color: '#94A3B8',
+          margin: '0 0 10px',
+          fontWeight: 500,
+        }}
+      >
+        내 관심종목 현황
+      </p>
+      <div
+        style={{
+          borderTop: '1px solid #F1F5F9',
+          paddingTop: '10px',
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: '20px',
+        }}
+      >
+        {/* 평균 수익률 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <span
+            style={{
+              fontSize: '20px',
+              fontWeight: 700,
+              color: avgColor,
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            {avgDisplay}
+          </span>
+          <span style={{ fontSize: '11px', color: '#94A3B8' }}>평균 수익률</span>
+        </div>
+
+        {/* 상승 */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <span
+            style={{
+              fontSize: '18px',
+              fontWeight: 700,
+              color: '#E84040',
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            ▲{rise}
+          </span>
+          <span style={{ fontSize: '11px', color: '#94A3B8' }}>상승</span>
+        </div>
+
+        {/* 하락 */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <span
+            style={{
+              fontSize: '18px',
+              fontWeight: 700,
+              color: '#2563EB',
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            ▼{fall}
+          </span>
+          <span style={{ fontSize: '11px', color: '#94A3B8' }}>하락</span>
+        </div>
+
+        {/* 보합 */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+          <span
+            style={{
+              fontSize: '18px',
+              fontWeight: 700,
+              color: '#6B7280',
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            →{flat}
+          </span>
+          <span style={{ fontSize: '11px', color: '#94A3B8' }}>보합</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ─── 섹션 헤더 ────────────────────────────────────────────────────────────────
 
@@ -182,6 +320,7 @@ export default function MyPage(): React.ReactElement {
   const [items, setItems] = useState<WatchlistItem[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [alerts, setAlerts] = useState<PriceAlert[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -190,6 +329,10 @@ export default function MyPage(): React.ReactElement {
       setLoaded(true);
     };
     void load();
+  }, []);
+
+  useEffect(() => {
+    setAlerts(getAlerts().filter((a) => !a.triggered));
   }, []);
 
   const streamSymbols = useMemo(() => items.map((i) => i.id), [items]);
@@ -202,6 +345,12 @@ export default function MyPage(): React.ReactElement {
       if (removed) showToast({ text: `${removed.name} 삭제됨`, type: 'warning' });
       return prev.filter((i) => i.id !== id);
     });
+  }, []);
+
+  const handleRemoveAlert = useCallback((id: string) => {
+    removeAlert(id);
+    setAlerts((prev) => prev.filter((a) => a.id !== id));
+    showToast({ text: '알림이 삭제되었습니다', type: 'warning' });
   }, []);
 
   const handleCopyUrl = useCallback(async () => {
@@ -246,6 +395,9 @@ export default function MyPage(): React.ReactElement {
         {/* 관심종목 섹션 */}
         <section aria-label="관심종목 관리">
           <SectionHeader title={`⭐ 관심종목 (${loaded ? items.length : '-'}개)`} />
+          {loaded && (
+            <WatchlistSummaryCard liveData={liveData} items={items} />
+          )}
 
           {!loaded ? (
             /* 로딩 스켈레톤 */
@@ -312,6 +464,100 @@ export default function MyPage(): React.ReactElement {
                   />
                 );
               })}
+            </div>
+          )}
+        </section>
+
+        {/* 가격 알림 섹션 */}
+        <section aria-label="가격 알림 목록">
+          <SectionHeader title={`🔔 가격 알림 (${alerts.length}개)`} />
+          {alerts.length === 0 ? (
+            <div
+              style={{
+                background: 'white',
+                borderRadius: '16px',
+                margin: '0 16px 8px',
+                padding: '24px 16px',
+                textAlign: 'center',
+              }}
+            >
+              <p style={{ fontSize: '14px', color: '#64748B', margin: 0 }}>
+                설정된 알림이 없습니다
+              </p>
+            </div>
+          ) : (
+            <div
+              style={{
+                background: 'white',
+                borderRadius: '16px',
+                margin: '0 16px 8px',
+                overflow: 'hidden',
+              }}
+            >
+              {alerts.map((alert, idx) => (
+                <div
+                  key={alert.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '14px 16px',
+                    borderBottom: idx < alerts.length - 1 ? '1px solid #F1F5F9' : 'none',
+                    gap: '10px',
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ fontSize: '14px', fontWeight: 500, color: '#0F172A' }}>
+                      {alert.name}
+                    </span>
+                    <p style={{ fontSize: '12px', color: '#64748B', margin: '2px 0 0' }}>
+                      {alert.condition === 'above' ? '이상' : '이하'}{' '}
+                      <span
+                        style={{
+                          fontWeight: 600,
+                          color: '#0F172A',
+                          fontVariantNumeric: 'tabular-nums',
+                        }}
+                      >
+                        {alert.targetPrice.toLocaleString()}원
+                      </span>
+                    </p>
+                  </div>
+                  <span
+                    style={{
+                      fontSize: '10px',
+                      color: alert.type === 'coin' ? '#7C3AED' : '#0369A1',
+                      background: alert.type === 'coin' ? '#EDE9FE' : '#E0F2FE',
+                      borderRadius: '6px',
+                      padding: '2px 8px',
+                      fontWeight: 500,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {alert.type === 'coin' ? '코인' : '주식'}
+                  </span>
+                  <button
+                    onClick={() => handleRemoveAlert(alert.id)}
+                    aria-label={`${alert.name} 알림 삭제`}
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      border: 'none',
+                      background: '#F1F5F9',
+                      color: '#94A3B8',
+                      fontSize: '16px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      lineHeight: 1,
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </section>

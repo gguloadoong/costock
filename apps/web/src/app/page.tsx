@@ -32,6 +32,7 @@ import { LiveIndicator } from '@/design-system';
 import { getWatchlist, addToWatchlist, removeFromWatchlist } from '@/lib/watchlistStorage';
 import type { WatchlistItem } from '@/lib/watchlistStorage';
 import { EmptyWatchlist } from '@/components/EmptyWatchlist';
+import { CrossAssetInsight } from '@/components/CrossAssetInsight';
 import { decodeWatchlistParam } from '@/lib/shareUrl';
 import {
   MOCK_INDICES,
@@ -420,10 +421,23 @@ export default function HomePage(): React.ReactElement {
             />
           )}
 
-          {/* 크로스에셋 요약 바 */}
-          {!showWatchlistEmpty && activeTab === 'watchlist' && watchlistInstruments.length > 0 && (
-            <CrossAssetBar instruments={watchlistInstruments} liveData={liveData} />
-          )}
+          {/* 크로스에셋 인사이트 */}
+          {!showWatchlistEmpty && activeTab === 'watchlist' && (() => {
+            const stockItems = watchlistItems.filter(w => w.type === 'stock');
+            const coinItems = watchlistItems.filter(w => w.type === 'coin');
+            if (stockItems.length === 0 && coinItems.length === 0) return null;
+            const avgChange = (items: WatchlistItem[]) => {
+              const rates = items
+                .map(i => liveData.get(i.id)?.changeRate ?? (findInstrument(i.id)?.changeRate ?? 0));
+              return rates.length ? rates.reduce((a, b) => a + b, 0) / rates.length : 0;
+            };
+            return (
+              <CrossAssetInsight
+                stocks={{ label: '주식', avgChange: avgChange(stockItems), count: stockItems.length }}
+                coins={{ label: '코인', avgChange: avgChange(coinItems), count: coinItems.length }}
+              />
+            );
+          })()}
 
           {/* 종목 목록 */}
           {!showWatchlistEmpty && (
