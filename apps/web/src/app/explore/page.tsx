@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { Toast } from '@/components/Toast';
 import { usePriceStream } from '@/hooks/usePriceStream';
+import { HeatmapView } from '@/components/HeatmapView';
 
 // ─── 타입 ─────────────────────────────────────────────────────────────────────
 
@@ -328,6 +329,7 @@ function RankList({ items, showVolume, filter, onNavigate }: RankListProps): Rea
 
 export default function ExplorePage(): React.ReactElement {
   const [filter, setFilter] = useState<AssetFilter>('all');
+  const [viewMode, setViewMode] = useState<'list' | 'heatmap'>('list');
   const router = useRouter();
 
   const { prices } = usePriceStream(TRACKED_SYMBOLS);
@@ -377,6 +379,17 @@ export default function ExplorePage(): React.ReactElement {
     router.push(path);
   };
 
+  const handleSelect = (symbol: string, type: 'stock' | 'coin') => {
+    const path = type === 'coin' ? `/coin/${symbol}` : `/stock/${symbol}`;
+    router.push(path);
+  };
+
+  // 히트맵에 표시할 items: 현재 필터 기준 전체 allItems
+  const heatmapItems = useMemo(
+    () => filter === 'all' ? allItems : allItems.filter(i => i.type === filter),
+    [allItems, filter]
+  );
+
   return (
     <>
       <div
@@ -398,40 +411,60 @@ export default function ExplorePage(): React.ReactElement {
             borderBottom: '1px solid #E2E8F0',
           }}
         >
-          <div style={{ padding: '16px 16px 0' }}>
+          <div style={{ padding: '16px 16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#0F172A', margin: 0 }}>
               탐색
             </h1>
+            <div className="flex gap-1">
+              <button
+                onClick={() => setViewMode('list')}
+                className={`px-2.5 py-1 rounded-lg text-xs ${viewMode === 'list' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500'}`}
+              >
+                목록
+              </button>
+              <button
+                onClick={() => setViewMode('heatmap')}
+                className={`px-2.5 py-1 rounded-lg text-xs ${viewMode === 'heatmap' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500'}`}
+              >
+                히트맵
+              </button>
+            </div>
           </div>
           <FilterTabs active={filter} onChange={setFilter} />
         </header>
 
-        {/* 급등 TOP5 */}
-        <section aria-label="오늘의 급등">
-          <SectionHeader
-            title="🔥 오늘의 급등"
-            count={filter === 'all' ? gainers.length : gainers.filter(i => i.type === filter).length}
-          />
-          <RankList items={gainers} filter={filter} onNavigate={handleNavigate} />
-        </section>
+        {viewMode === 'heatmap' ? (
+          <HeatmapView items={heatmapItems} onSelect={handleSelect} />
+        ) : (
+          <>
+            {/* 급등 TOP5 */}
+            <section aria-label="오늘의 급등">
+              <SectionHeader
+                title="🔥 오늘의 급등"
+                count={filter === 'all' ? gainers.length : gainers.filter(i => i.type === filter).length}
+              />
+              <RankList items={gainers} filter={filter} onNavigate={handleNavigate} />
+            </section>
 
-        {/* 급락 TOP5 */}
-        <section aria-label="오늘의 급락">
-          <SectionHeader
-            title="📉 오늘의 급락"
-            count={filter === 'all' ? losers.length : losers.filter(i => i.type === filter).length}
-          />
-          <RankList items={losers} filter={filter} onNavigate={handleNavigate} />
-        </section>
+            {/* 급락 TOP5 */}
+            <section aria-label="오늘의 급락">
+              <SectionHeader
+                title="📉 오늘의 급락"
+                count={filter === 'all' ? losers.length : losers.filter(i => i.type === filter).length}
+              />
+              <RankList items={losers} filter={filter} onNavigate={handleNavigate} />
+            </section>
 
-        {/* 거래량 급증 TOP5 */}
-        <section aria-label="거래량 급증">
-          <SectionHeader
-            title="📊 거래량 급증"
-            count={filter === 'all' ? volumeTop.length : volumeTop.filter(i => i.type === filter).length}
-          />
-          <RankList items={volumeTop} showVolume filter={filter} onNavigate={handleNavigate} />
-        </section>
+            {/* 거래량 급증 TOP5 */}
+            <section aria-label="거래량 급증">
+              <SectionHeader
+                title="📊 거래량 급증"
+                count={filter === 'all' ? volumeTop.length : volumeTop.filter(i => i.type === filter).length}
+              />
+              <RankList items={volumeTop} showVolume filter={filter} onNavigate={handleNavigate} />
+            </section>
+          </>
+        )}
       </div>
 
       <BottomNavigation />

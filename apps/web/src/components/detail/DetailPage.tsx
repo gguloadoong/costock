@@ -19,6 +19,8 @@ import type { WatchlistItem } from '@/lib/watchlistStorage';
 import { PriceChart } from './PriceChart';
 import { showToast } from '@/components/Toast';
 import { AlertModal } from '@/components/AlertModal';
+import { PriceChange } from '@/components/PriceChange';
+import { formatKRW, formatVolume } from '@/lib/formatters';
 
 // ─── 타입 ─────────────────────────────────────────────────────────────────────
 
@@ -109,14 +111,6 @@ function formatPrice(value: number): string {
   return value.toLocaleString('ko-KR');
 }
 
-function formatVolume(volume: number): string {
-  if (volume >= 10_000) {
-    const man = volume / 10_000;
-    return `${man % 1 === 0 ? man.toFixed(0) : man.toFixed(1)}만주`;
-  }
-  return formatPrice(volume);
-}
-
 // ─── DetailPage ───────────────────────────────────────────────────────────────
 
 interface PriceApiData {
@@ -147,18 +141,6 @@ export function DetailPage({ symbol, assetType }: DetailPageProps): React.ReactE
   const currentChange = live?.change ?? apiData?.change ?? mockChange.change;
   const currentChangeRate = live?.changeRate ?? apiData?.changeRate ?? mockChange.changeRate;
   const prevClose = apiData?.prevClose ?? null;
-
-  const direction = currentChangeRate > 0 ? 'rise' : currentChangeRate < 0 ? 'fall' : 'flat';
-  const changeColor =
-    direction === 'rise'
-      ? 'var(--kr-rise)'
-      : direction === 'fall'
-      ? 'var(--kr-fall)'
-      : 'var(--kr-flat)';
-
-  const changeSign = currentChange > 0 ? '+' : '';
-  const changeFormatted = `${changeSign}${formatPrice(currentChange)}`;
-  const rateFormatted = `${changeSign}${currentChangeRate.toFixed(2)}%`;
 
   // Watchlist 상태 로드
   useEffect(() => {
@@ -263,14 +245,26 @@ export function DetailPage({ symbol, assetType }: DetailPageProps): React.ReactE
   }, [symbol]);
 
   // 핵심 지표 mock
-  const high52w = Math.round(currentPrice * 1.3);
-  const low52w = Math.round(currentPrice * 0.7);
-  const mockVolume = MOCK_VOLUMES[symbol] ?? 500_000;
+  const openPrice = Math.round(currentPrice * 0.998);
+  const highPrice = Math.round(currentPrice * 1.015);
+  const lowPrice = Math.round(currentPrice * 0.985);
+  const high52w = Math.round(currentPrice * 1.35);
+  const low52w = Math.round(currentPrice * 0.65);
+  const mockVolume = MOCK_VOLUMES[symbol] ?? 1_234_567;
   const fourthMetricLabel = assetType === 'stock' ? '시가총액' : '도미넌스';
   const fourthMetricValue =
     assetType === 'stock'
       ? `${formatPrice(Math.round(currentPrice * 5_000_000))}원`
       : (MOCK_DOMINANCE[symbol] ?? '0.50%');
+
+  const stats = [
+    { label: '시가', value: formatKRW(openPrice) },
+    { label: '고가', value: formatKRW(highPrice) },
+    { label: '저가', value: formatKRW(lowPrice) },
+    { label: '거래량', value: formatVolume(mockVolume) },
+    { label: '52주 최고', value: formatKRW(high52w) },
+    { label: '52주 최저', value: formatKRW(low52w) },
+  ];
 
   const fallbackNewsUrl =
     assetType === 'stock'
@@ -410,17 +404,9 @@ export function DetailPage({ symbol, assetType }: DetailPageProps): React.ReactE
         >
           {formatPrice(currentPrice)}원
         </p>
-        <p
-          style={{
-            fontSize: '20px',
-            fontWeight: 600,
-            color: changeColor,
-            margin: '0 0 6px',
-            fontVariantNumeric: 'tabular-nums',
-            fontFamily: 'Menlo, Consolas, monospace',
-          }}
-        >
-          {changeFormatted} ({rateFormatted}) 오늘
+        <p style={{ fontSize: '15px', margin: '0 0 6px' }}>
+          <span style={{ color: '#64748B', marginRight: '6px' }}>전일 대비</span>
+          <PriceChange rate={currentChangeRate} diff={currentChange} size="base" showArrow />
         </p>
         {prevClose !== null && (
           <p style={{ fontSize: '13px', color: '#64748B', margin: 0 }}>
@@ -434,7 +420,7 @@ export function DetailPage({ symbol, assetType }: DetailPageProps): React.ReactE
         <PriceChart symbol={symbol} assetType={assetType} />
       </section>
 
-      {/* ── 핵심 지표 그리드 (2x2) ── */}
+      {/* ── 핵심 지표 그리드 (3x2) ── */}
       <section style={{ padding: '16px' }}>
         <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#0F172A', margin: '0 0 12px' }}>
           핵심 지표
@@ -446,9 +432,11 @@ export function DetailPage({ symbol, assetType }: DetailPageProps): React.ReactE
             gap: '12px',
           }}
         >
-          <MetricCard label="52주 최고가 (추정)" value={`${formatPrice(high52w)}원`} />
-          <MetricCard label="52주 최저가 (추정)" value={`${formatPrice(low52w)}원`} />
-          <MetricCard label="거래량" value={formatVolume(mockVolume)} />
+          {stats.map((s) => (
+            <MetricCard key={s.label} label={s.label} value={s.value} />
+          ))}
+        </div>
+        <div style={{ marginTop: '12px' }}>
           <MetricCard label={fourthMetricLabel} value={fourthMetricValue} />
         </div>
       </section>
