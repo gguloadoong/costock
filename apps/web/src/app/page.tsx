@@ -159,6 +159,7 @@ export default function HomePage(): React.ReactElement {
   const [activeTab, setActiveTab] = useState<HomeTab>('watchlist');
   const [watchlistItems, setWatchlistItems] = useState<WatchlistItem[]>([]);
   const [watchlistLoaded, setWatchlistLoaded] = useState(false);
+  const [watchlistSort, setWatchlistSort] = useState<'기본순' | '변동률' | '이름순'>('기본순');
   const [, startTransition] = useTransition();
   const [marketIndices, setMarketIndices] = useState<MarketIndex[]>(MOCK_INDICES);
   const [isIndicesLoading, setIsIndicesLoading] = useState(true);
@@ -242,8 +243,13 @@ export default function HomePage(): React.ReactElement {
 
   // 탭 전환은 React 18 useTransition으로 부드럽게 처리 + 스크롤 최상단
   const handleTabChange = (tab: HomeTab) => {
-    startTransition(() => setActiveTab(tab));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (tab === activeTab) {
+      // 같은 탭 다시 클릭 → 스크롤 투탑
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      startTransition(() => setActiveTab(tab));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   // PullToRefresh: 관심종목 + 시장 지수 재로드
@@ -291,9 +297,9 @@ export default function HomePage(): React.ReactElement {
     router.push(`/${type === 'coin' ? 'coin' : 'stock'}/${symbol}`);
   }, [router]);
 
-  // 관심종목 탭: WatchlistItem → InstrumentWithPrice 변환
+  // 관심종목 탭: WatchlistItem → InstrumentWithPrice 변환 + 정렬 적용
   const watchlistInstruments = useMemo<InstrumentWithPrice[]>(() => {
-    return watchlistItems
+    let items = watchlistItems
       .map((item) => findInstrument(item.id) ?? {
         symbol: item.id,
         name: item.name,
@@ -306,7 +312,21 @@ export default function HomePage(): React.ReactElement {
         timestamp: Date.now(),
       })
       .filter((i): i is InstrumentWithPrice => i !== null);
-  }, [watchlistItems]);
+
+    // 정렬 적용
+    if (watchlistSort === '변동률') {
+      items = items.sort((a, b) => {
+        const rateA = liveData.get(a.symbol)?.changeRate ?? a.changeRate;
+        const rateB = liveData.get(b.symbol)?.changeRate ?? b.changeRate;
+        return rateB - rateA; // 내림차순 (상승률 높은 순)
+      });
+    } else if (watchlistSort === '이름순') {
+      items = items.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+    }
+    // 기본순은 추가 정렬 없음 (watchlistItems 순서 유지)
+
+    return items;
+  }, [watchlistItems, watchlistSort, liveData]);
 
   // 현재 탭에 맞는 종목 목록
   const activeInstruments = useMemo<InstrumentWithPrice[]>(() => {
@@ -443,32 +463,59 @@ export default function HomePage(): React.ReactElement {
             );
           })()}
 
+          {/* 관심종목 정렬 버튼 */}
+          {!showWatchlistEmpty && activeTab === 'watchlist' && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '0 16px 8px 16px', gap: '8px' }}>
+              {['기본순', '변동률', '이름순'].map(sort => (
+                <button
+                  key={sort}
+                  onClick={() => setWatchlistSort(sort as '기본순' | '변동률' | '이름순')}
+                  style={{
+                    fontSize: '12px',
+                    padding: '6px 10px',
+                    borderRadius: '20px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                    backgroundColor: watchlistSort === sort ? '#0F172A' : '#F3F4F6',
+                    color: watchlistSort === sort ? 'white' : '#6B7280',
+                    fontWeight: 500,
+                  }}
+                >
+                  {sort}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* 종목 목록 */}
           {!showWatchlistEmpty && (
-            <InstrumentList
-              instruments={activeInstruments}
-              liveData={liveData}
-              isLoading={activeTab === 'watchlist' && !watchlistLoaded}
-              tabId={activeTab}
-              onSelect={(symbol) => {
-                const found = watchlistInstruments.find((i) => i.symbol === symbol)
-                  ?? ALL_MOCK.find((i) => i.symbol === symbol);
-                if (found) {
-                  router.push(`/${found.type === 'coin' ? 'coin' : 'stock'}/${found.symbol}`);
-                }
-              }}
-              watchlistIds={watchlistIds}
-              onWatchlistToggle={(item) => {
-                if (watchlistIds.has(item.symbol)) {
-                  void removeFromWatchlist(item.symbol).then(() => {
-                    setWatchlistItems((prev) => prev.filter((w) => w.id !== item.symbol));
-                    showToast({ text: `${item.name} 관심종목 제거`, type: 'warning' });
-                  });
-                } else {
-                  void handleAddToWatchlist({ id: item.symbol, type: item.type, name: item.name, addedAt: 0 });
-                }
-              }}
-            />
+            <div key={activeTab} style={{ animation: 'fadeIn 0.15s ease' }}>
+              <InstrumentList
+                instruments={activeInstruments}
+                liveData={liveData}
+                isLoading={activeTab === 'watchlist' && !watchlistLoaded}
+                tabId={activeTab}
+                onSelect={(symbol) => {
+                  const found = watchlistInstruments.find((i) => i.symbol === symbol)
+                    ?? ALL_MOCK.find((i) => i.symbol === symbol);
+                  if (found) {
+                    router.push(`/${found.type === 'coin' ? 'coin' : 'stock'}/${found.symbol}`);
+                  }
+                }}
+                watchlistIds={watchlistIds}
+                onWatchlistToggle={(item) => {
+                  if (watchlistIds.has(item.symbol)) {
+                    void removeFromWatchlist(item.symbol).then(() => {
+                      setWatchlistItems((prev) => prev.filter((w) => w.id !== item.symbol));
+                      showToast({ text: `${item.name} 관심종목 제거`, type: 'warning' });
+                    });
+                  } else {
+                    void handleAddToWatchlist({ id: item.symbol, type: item.type, name: item.name, addedAt: 0 });
+                  }
+                }}
+              />
+            </div>
           )}
         </section>
       </PullToRefresh>
