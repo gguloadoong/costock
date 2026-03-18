@@ -29,8 +29,9 @@ import { usePriceStream } from '@/hooks/usePriceStream';
 import type { HomeTab, MarketIndex, InstrumentWithPrice } from '@/types/market';
 import type { AssetType } from '@/design-system';
 import { LiveIndicator } from '@/design-system';
-import { getWatchlist, addToWatchlist, removeFromWatchlist } from '@/lib/watchlistStorage';
+import { getWatchlist, addToWatchlist, removeFromWatchlist, initDefaultWatchlist } from '@/lib/watchlistStorage';
 import type { WatchlistItem } from '@/lib/watchlistStorage';
+import { InstrumentListSkeleton } from '@/components/InstrumentListSkeleton';
 import { EmptyWatchlist } from '@/components/EmptyWatchlist';
 import { CrossAssetInsight } from '@/components/CrossAssetInsight';
 import { OnboardingToast } from '@/components/OnboardingToast';
@@ -159,6 +160,7 @@ export default function HomePage(): React.ReactElement {
   const [activeTab, setActiveTab] = useState<HomeTab>('watchlist');
   const [watchlistItems, setWatchlistItems] = useState<WatchlistItem[]>([]);
   const [watchlistLoaded, setWatchlistLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [watchlistSort, setWatchlistSort] = useState<'기본순' | '변동률' | '이름순'>('기본순');
   const [, startTransition] = useTransition();
   const [marketIndices, setMarketIndices] = useState<MarketIndex[]>(MOCK_INDICES);
@@ -167,6 +169,7 @@ export default function HomePage(): React.ReactElement {
   // 관심종목 스토리지 로드 + ?w= URL 파라미터 처리
   useEffect(() => {
     const loadWatchlist = async () => {
+      await initDefaultWatchlist();
       const stored = await getWatchlist();
 
       // ?w=KRW-BTC,005930 파라미터로 공유된 목록 병합
@@ -190,6 +193,7 @@ export default function HomePage(): React.ReactElement {
 
       setWatchlistItems(stored);
       setWatchlistLoaded(true);
+      setIsLoading(false);
     };
     void loadWatchlist();
   }, []);
@@ -491,10 +495,13 @@ export default function HomePage(): React.ReactElement {
           {/* 종목 목록 */}
           {!showWatchlistEmpty && (
             <div key={activeTab} style={{ animation: 'fadeIn 0.15s ease' }}>
+              {isLoading && activeTab === 'watchlist' ? (
+                <InstrumentListSkeleton />
+              ) : (
               <InstrumentList
                 instruments={activeInstruments}
                 liveData={liveData}
-                isLoading={activeTab === 'watchlist' && !watchlistLoaded}
+                isLoading={false}
                 tabId={activeTab}
                 onSelect={(symbol) => {
                   const found = watchlistInstruments.find((i) => i.symbol === symbol)
@@ -515,6 +522,7 @@ export default function HomePage(): React.ReactElement {
                   }
                 }}
               />
+              )}
             </div>
           )}
         </section>

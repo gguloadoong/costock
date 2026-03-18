@@ -235,3 +235,27 @@ export async function clearWatchlist(): Promise<void> {
     lsSave([]);
   }
 }
+
+/**
+ * 처음 실행 시 기본 관심종목 초기화
+ * 관심종목이 하나도 없을 때만 DEFAULT_WATCHLIST_SYMBOLS를 추가한다.
+ */
+export async function initDefaultWatchlist(): Promise<void> {
+  const { DEFAULT_WATCHLIST_SYMBOLS, ALL_MOCK } = await import('@/data/mockData');
+
+  const existing = await getWatchlist();
+  if (existing.length > 0) return;
+
+  const now = Date.now();
+  for (const { symbol, type } of DEFAULT_WATCHLIST_SYMBOLS) {
+    const found = ALL_MOCK.find((i) => i.symbol === symbol);
+    if (!found) continue;
+    const item: WatchlistItem = {
+      id: symbol,
+      type,
+      name: found.name,
+      addedAt: now,
+    };
+    await addToWatchlist(item);
+  }
+}

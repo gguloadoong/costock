@@ -170,3 +170,10 @@ export const QUICK_ADD_SYMBOLS: WatchlistItem[] = [
 ];
 
 export const ALL_MOCK: InstrumentWithPrice[] = [...MOCK_STOCKS, ...MOCK_COINS];
+
+export const DEFAULT_WATCHLIST_SYMBOLS: { symbol: string; type: 'stock' | 'coin' }[] = [
+  { symbol: '005930', type: 'stock' }, // 삼성전자
+  { symbol: 'KRW-BTC', type: 'coin' }, // 비트코인
+  { symbol: '035420', type: 'stock' }, // NAVER
+  { symbol: 'KRW-ETH', type: 'coin' }, // 이더리움
+];

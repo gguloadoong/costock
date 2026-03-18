@@ -56,35 +56,35 @@ const SYMBOL_META: Record<string, SymbolMeta> = {
   // 주식
   '005930': { name: '삼성전자', type: 'stock', baseChangeRate: 3.12, basePrice: 78_400, baseVolume: 24_812_091 },
   '000660': { name: 'SK하이닉스', type: 'stock', baseChangeRate: 2.41, basePrice: 198_000, baseVolume: 8_341_200 },
-  '373220': { name: 'LG에너지솔루션', type: 'stock', baseChangeRate: 0.85, basePrice: 412_000 },
-  '207940': { name: '삼성바이오로직스', type: 'stock', baseChangeRate: -0.42, basePrice: 873_000 },
-  '005380': { name: '현대차', type: 'stock', baseChangeRate: 1.20, basePrice: 218_000 },
-  '035420': { name: 'NAVER', type: 'stock', baseChangeRate: -1.10, basePrice: 185_000 },
-  '000270': { name: '기아', type: 'stock', baseChangeRate: 0.60, basePrice: 105_000 },
-  '051910': { name: 'LG화학', type: 'stock', baseChangeRate: -3.87, basePrice: 312_000 },
-  '006400': { name: '삼성SDI', type: 'stock', baseChangeRate: -1.50, basePrice: 287_000 },
-  '028260': { name: '삼성물산', type: 'stock', baseChangeRate: 0.30, basePrice: 148_000 },
-  '105560': { name: 'KB금융', type: 'stock', baseChangeRate: 1.05, basePrice: 89_500 },
-  '055550': { name: '신한지주', type: 'stock', baseChangeRate: 0.75, basePrice: 56_200 },
-  '035720': { name: '카카오', type: 'stock', baseChangeRate: -2.66, basePrice: 41_850 },
-  '012330': { name: '현대모비스', type: 'stock', baseChangeRate: 0.45, basePrice: 236_000 },
-  '066570': { name: 'LG전자', type: 'stock', baseChangeRate: -0.80, basePrice: 96_200 },
-  '003550': { name: 'LG', type: 'stock', baseChangeRate: 0.20, basePrice: 78_100 },
-  '096770': { name: 'SK이노베이션', type: 'stock', baseChangeRate: -0.35, basePrice: 124_000 },
-  '034730': { name: 'SK', type: 'stock', baseChangeRate: 0.50, basePrice: 168_000 },
-  '247540': { name: '에코프로비엠', type: 'stock', baseChangeRate: -1.20, basePrice: 142_000 },
-  '086280': { name: '현대글로비스', type: 'stock', baseChangeRate: 0.90, basePrice: 198_000 },
+  '373220': { name: 'LG에너지솔루션', type: 'stock', baseChangeRate: 0.85, basePrice: 412_000, baseVolume: 1_204_310 },
+  '207940': { name: '삼성바이오로직스', type: 'stock', baseChangeRate: -0.42, basePrice: 873_000, baseVolume: 384_920 },
+  '005380': { name: '현대차', type: 'stock', baseChangeRate: 1.20, basePrice: 218_000, baseVolume: 2_103_440 },
+  '035420': { name: 'NAVER', type: 'stock', baseChangeRate: -1.10, basePrice: 185_000, baseVolume: 1_923_410 },
+  '000270': { name: '기아', type: 'stock', baseChangeRate: 0.60, basePrice: 105_000, baseVolume: 3_481_200 },
+  '051910': { name: 'LG화학', type: 'stock', baseChangeRate: -3.87, basePrice: 312_000, baseVolume: 944_210 },
+  '006400': { name: '삼성SDI', type: 'stock', baseChangeRate: -1.50, basePrice: 287_000, baseVolume: 712_880 },
+  '028260': { name: '삼성물산', type: 'stock', baseChangeRate: 0.30, basePrice: 148_000, baseVolume: 561_430 },
+  '105560': { name: 'KB금융', type: 'stock', baseChangeRate: 1.05, basePrice: 89_500, baseVolume: 2_840_770 },
+  '055550': { name: '신한지주', type: 'stock', baseChangeRate: 0.75, basePrice: 56_200, baseVolume: 3_104_220 },
+  '035720': { name: '카카오', type: 'stock', baseChangeRate: -2.66, basePrice: 41_850, baseVolume: 7_204_332 },
+  '012330': { name: '현대모비스', type: 'stock', baseChangeRate: 0.45, basePrice: 236_000, baseVolume: 498_110 },
+  '066570': { name: 'LG전자', type: 'stock', baseChangeRate: -0.80, basePrice: 96_200, baseVolume: 1_832_540 },
+  '003550': { name: 'LG', type: 'stock', baseChangeRate: 0.20, basePrice: 78_100, baseVolume: 623_890 },
+  '096770': { name: 'SK이노베이션', type: 'stock', baseChangeRate: -0.35, basePrice: 124_000, baseVolume: 1_047_600 },
+  '034730': { name: 'SK', type: 'stock', baseChangeRate: 0.50, basePrice: 168_000, baseVolume: 412_330 },
+  '247540': { name: '에코프로비엠', type: 'stock', baseChangeRate: -1.20, basePrice: 142_000, baseVolume: 5_201_440 },
+  '086280': { name: '현대글로비스', type: 'stock', baseChangeRate: 0.90, basePrice: 198_000, baseVolume: 387_210 },
   // 코인
   'KRW-BTC': { name: '비트코인', type: 'coin', baseChangeRate: 4.23, basePrice: 94_500_000, baseVolume: 18_204 },
   'KRW-ETH': { name: '이더리움', type: 'coin', baseChangeRate: 2.87, basePrice: 4_820_000, baseVolume: 92_910 },
   'KRW-XRP': { name: '리플', type: 'coin', baseChangeRate: -1.89, basePrice: 3_710, baseVolume: 3_204_885 },
-  'KRW-SOL': { name: '솔라나', type: 'coin', baseChangeRate: 1.98, basePrice: 184_000 },
-  'KRW-ADA': { name: '에이다', type: 'coin', baseChangeRate: -3.22, basePrice: 1_120 },
-  'KRW-DOGE': { name: '도지코인', type: 'coin', baseChangeRate: -5.41, basePrice: 182 },
-  'KRW-AVAX': { name: '아발란체', type: 'coin', baseChangeRate: 0.65, basePrice: 38_200 },
-  'KRW-MATIC': { name: '폴리곤', type: 'coin', baseChangeRate: -0.92, basePrice: 940 },
-  'KRW-DOT': { name: '폴카닷', type: 'coin', baseChangeRate: 1.15, basePrice: 10_800 },
-  'KRW-LINK': { name: '체인링크', type: 'coin', baseChangeRate: 2.30, basePrice: 22_400 },
+  'KRW-SOL': { name: '솔라나', type: 'coin', baseChangeRate: 1.98, basePrice: 184_000, baseVolume: 48_320 },
+  'KRW-ADA': { name: '에이다', type: 'coin', baseChangeRate: -3.22, basePrice: 1_120, baseVolume: 4_882_001 },
+  'KRW-DOGE': { name: '도지코인', type: 'coin', baseChangeRate: -5.41, basePrice: 182, baseVolume: 12_304_550 },
+  'KRW-AVAX': { name: '아발란체', type: 'coin', baseChangeRate: 0.65, basePrice: 38_200, baseVolume: 182_440 },
+  'KRW-MATIC': { name: '폴리곤', type: 'coin', baseChangeRate: -0.92, basePrice: 940, baseVolume: 8_102_330 },
+  'KRW-DOT': { name: '폴카닷', type: 'coin', baseChangeRate: 1.15, basePrice: 10_800, baseVolume: 1_024_780 },
+  'KRW-LINK': { name: '체인링크', type: 'coin', baseChangeRate: 2.30, basePrice: 22_400, baseVolume: 641_920 },
 };
 
 // ─── 유틸 ─────────────────────────────────────────────────────────────────────
@@ -189,7 +189,7 @@ function SectionHeader({ title, count }: SectionHeaderProps): React.ReactElement
             padding: '1px 8px',
           }}
         >
-          {count}
+          {count === 0 ? '-' : count}
         </span>
       )}
     </h2>
