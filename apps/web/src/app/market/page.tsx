@@ -11,10 +11,12 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { Toast } from '@/components/Toast';
 import { NewsFeed } from '@/components/NewsFeed';
+import { EconomicCalendar } from '@/components/EconomicCalendar';
+import { timeAgo } from '@/lib/timeAgo';
 
 // ─── 타입 ─────────────────────────────────────────────────────────────────────
 
@@ -505,28 +507,66 @@ function SectorRow({ data, isLast }: SectorRowProps): React.ReactElement {
 
 // ─── MarketPage ───────────────────────────────────────────────────────────────
 
+const REFRESH_INTERVAL_MS = 30_000;
+
 export default function MarketPage(): React.ReactElement {
   const [indices, setIndices] = useState<IndexData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<number>(Date.now());
+  const [timeAgoLabel, setTimeAgoLabel] = useState<string>('방금 전');
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
-    const fetchIndices = async () => {
-      try {
-        const res = await fetch('/api/v1/market/indices');
-        if (res.ok) {
-          const data = (await res.json()) as IndexData[];
-          setIndices(data);
-        } else {
-          setIndices(MOCK_INDICES);
-        }
-      } catch {
+  const fetchIndices = useCallback(async () => {
+    try {
+      const res = await fetch('/api/v1/market/indices');
+      if (res.ok) {
+        const data = (await res.json()) as IndexData[];
+        setIndices(data);
+      } else {
         setIndices(MOCK_INDICES);
-      } finally {
-        setIsLoading(false);
+      }
+    } catch {
+      setIndices(MOCK_INDICES);
+    } finally {
+      setIsLoading(false);
+      setLastUpdated(Date.now());
+    }
+  }, []);
+
+  // 최초 로드 + 30초 자동 새로고침
+  useEffect(() => {
+    void fetchIndices();
+
+    intervalRef.current = setInterval(() => {
+      void fetchIndices();
+    }, REFRESH_INTERVAL_MS);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [fetchIndices]);
+
+  // 페이지 포커스 시 즉시 갱신
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void fetchIndices();
       }
     };
-    void fetchIndices();
-  }, []);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fetchIndices]);
+
+  // timeAgo 레이블 1초마다 갱신
+  useEffect(() => {
+    setTimeAgoLabel(timeAgo(lastUpdated));
+    const tick = setInterval(() => {
+      setTimeAgoLabel(timeAgo(lastUpdated));
+    }, 1_000);
+    return () => clearInterval(tick);
+  }, [lastUpdated]);
 
   const displayIndices = isLoading ? MOCK_INDICES : indices;
 
@@ -552,9 +592,26 @@ export default function MarketPage(): React.ReactElement {
             padding: '16px 16px 12px',
           }}
         >
-          <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#0F172A', margin: 0 }}>
-            시장
-          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+              시장
+            </h1>
+            <button
+              onClick={() => { void fetchIndices(); }}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: '4px 0',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+              aria-label="수동 새로고침"
+            >
+              <span className="text-xs text-gray-400">{timeAgoLabel} ↻</span>
+            </button>
+          </div>
         </header>
 
         {/* 시장 Breadth */}
@@ -626,6 +683,21 @@ export default function MarketPage(): React.ReactElement {
                 isLast={idx === SECTOR_DATA.length - 1}
               />
             ))}
+          </div>
+        </section>
+
+        {/* 경제 일정 */}
+        <section aria-label="경제 일정">
+          <SectionHeader title="📅 경제 일정" />
+          <div
+            style={{
+              background: 'white',
+              borderRadius: '16px',
+              margin: '0 16px 8px',
+              overflow: 'hidden',
+            }}
+          >
+            <EconomicCalendar />
           </div>
         </section>
 
