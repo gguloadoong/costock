@@ -25,6 +25,7 @@ import type { PriceAlert } from '@/lib/alertStorage';
 import { useNotification } from '@/lib/useNotification';
 import { getHoldings, removeHolding, calcPnL } from '@/lib/holdingStorage';
 import type { Holding } from '@/lib/holdingStorage';
+import { AllocationChart } from '@/components/AllocationChart';
 
 // ─── 관심종목 현황 요약 카드 ──────────────────────────────────────────────────
 
@@ -561,6 +562,40 @@ export default function MyPage(): React.ReactElement {
                         ({totalPnlRate >= 0 ? '+' : ''}{totalPnlRate.toFixed(2)}%)
                       </span>
                     </div>
+                  </div>
+                );
+              })()}
+
+              {/* 자산 배분 차트 */}
+              {(() => {
+                const stockTotal = holdings
+                  .filter(h => h.type === 'stock')
+                  .reduce((sum, h) => sum + h.avgPrice * h.quantity, 0);
+                const coinTotal = holdings
+                  .filter(h => h.type === 'coin')
+                  .reduce((sum, h) => sum + h.avgPrice * h.quantity, 0);
+                const allocationItems = [
+                  { label: '주식', value: stockTotal, color: '#3B82F6' },
+                  { label: '코인', value: coinTotal, color: '#F59E0B' },
+                ].filter(i => i.value > 0);
+                if (allocationItems.length === 0) return null;
+                const totalInvest = stockTotal + coinTotal;
+                return (
+                  <div
+                    style={{
+                      background: 'white',
+                      borderRadius: '16px',
+                      margin: '0 16px 8px',
+                      padding: '16px',
+                    }}
+                  >
+                    <p style={{ fontSize: '12px', color: '#94A3B8', margin: '0 0 12px', fontWeight: 500 }}>
+                      자산 배분
+                    </p>
+                    <AllocationChart
+                      items={allocationItems}
+                      totalLabel={`${totalInvest.toLocaleString()}원`}
+                    />
                   </div>
                 );
               })()}

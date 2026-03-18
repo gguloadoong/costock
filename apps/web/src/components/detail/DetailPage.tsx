@@ -58,13 +58,9 @@ function getRelatedSymbols(symbol: string, assetType: 'stock' | 'coin'): Related
     return RELATED_SYMBOLS[symbol];
   }
 
-  // 코인의 경우 심볼에서 KRW- 제거하여 매핑 확인
+  // 코인의 경우 canonical id(KRW-*) 기준으로 현재 종목만 제외
   if (assetType === 'coin') {
-    const cleanSymbol = symbol.replace('KRW-', '');
-    if (RELATED_SYMBOLS[cleanSymbol]) {
-      return RELATED_SYMBOLS[cleanSymbol];
-    }
-    return DEFAULT_RELATED_COIN.filter((item) => item.symbol !== cleanSymbol);
+    return DEFAULT_RELATED_COIN.filter((item) => item.symbol !== symbol);
   }
 
   // 주식의 경우 기본값 반환
@@ -155,15 +151,15 @@ const RELATED_SYMBOLS: Record<string, RelatedSymbol[]> = {
     { symbol: '009150', name: '삼성전기', type: 'stock' },
     { symbol: '006400', name: '삼성SDI', type: 'stock' },
   ],
-  'BTC': [
-    { symbol: 'ETH', name: '이더리움', type: 'coin' },
-    { symbol: 'SOL', name: '솔라나', type: 'coin' },
-    { symbol: 'XRP', name: '리플', type: 'coin' },
+  'KRW-BTC': [
+    { symbol: 'KRW-ETH', name: '이더리움', type: 'coin' },
+    { symbol: 'KRW-SOL', name: '솔라나', type: 'coin' },
+    { symbol: 'KRW-XRP', name: '리플', type: 'coin' },
   ],
-  'ETH': [
-    { symbol: 'BTC', name: '비트코인', type: 'coin' },
-    { symbol: 'SOL', name: '솔라나', type: 'coin' },
-    { symbol: 'MATIC', name: '폴리곤', type: 'coin' },
+  'KRW-ETH': [
+    { symbol: 'KRW-BTC', name: '비트코인', type: 'coin' },
+    { symbol: 'KRW-SOL', name: '솔라나', type: 'coin' },
+    { symbol: 'KRW-MATIC', name: '폴리곤', type: 'coin' },
   ],
   '035420': [ // NAVER
     { symbol: '035720', name: '카카오', type: 'stock' },
@@ -182,9 +178,9 @@ const DEFAULT_RELATED_STOCK: RelatedSymbol[] = [
 ];
 
 const DEFAULT_RELATED_COIN: RelatedSymbol[] = [
-  { symbol: 'BTC', name: '비트코인', type: 'coin' },
-  { symbol: 'ETH', name: '이더리움', type: 'coin' },
-  { symbol: 'XRP', name: '리플', type: 'coin' },
+  { symbol: 'KRW-BTC', name: '비트코인', type: 'coin' },
+  { symbol: 'KRW-ETH', name: '이더리움', type: 'coin' },
+  { symbol: 'KRW-XRP', name: '리플', type: 'coin' },
 ];
 
 function formatPrice(value: number): string {
@@ -714,7 +710,7 @@ function RelatedSymbolsSection({
 
   const handleSymbolClick = useCallback(
     (relatedSymbol: string, relatedAssetType: 'stock' | 'coin') => {
-      router.push(`/detail/${relatedAssetType}/${relatedSymbol}`);
+      router.push(`/${relatedAssetType}/${relatedSymbol}`);
     },
     [router]
   );
