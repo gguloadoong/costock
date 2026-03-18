@@ -14,6 +14,7 @@
 import React, { useState, useEffect } from 'react';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { Toast } from '@/components/Toast';
+import { NewsFeed } from '@/components/NewsFeed';
 
 // ─── 타입 ─────────────────────────────────────────────────────────────────────
 
@@ -626,6 +627,12 @@ export default function MarketPage(): React.ReactElement {
               />
             ))}
           </div>
+        </section>
+
+        {/* 시장 뉴스 */}
+        <section className="py-4">
+          <h2 className="text-sm font-semibold text-gray-500 px-4 mb-0">시장 뉴스</h2>
+          <NewsFeed limit={6} />
         </section>
       </div>
 
