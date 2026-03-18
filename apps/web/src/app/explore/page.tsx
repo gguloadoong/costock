@@ -3,9 +3,9 @@
  *
  * 섹션:
  *   1. 탭 [전체 | 주식 | 코인]
- *   2. 오늘의 급등 TOP5
- *   3. 오늘의 급락 TOP5
- *   4. 거래량 급증 TOP5
+ *   2. 정렬 기준 pill 버튼 바 [급등 🔥 | 급락 📉 | 거래량 💧 | 시총 👑]
+ *   3. 정렬된 랭킹 리스트 (상위 10개)
+ *   4. 히트맵 뷰 (토글)
  */
 
 'use client';
@@ -20,6 +20,7 @@ import { HeatmapView } from '@/components/HeatmapView';
 // ─── 타입 ─────────────────────────────────────────────────────────────────────
 
 type AssetFilter = 'all' | 'stock' | 'coin';
+type SortBy = 'gainers' | 'losers' | 'volume' | 'marketcap';
 
 interface RankItem {
   symbol: string;
@@ -101,6 +102,10 @@ function formatVolume(volume: number): string {
   return volume.toLocaleString('ko-KR');
 }
 
+function getMarketCap(item: RankItem): number {
+  return item.price * (item.type === 'stock' ? 100_000_000 : 1);
+}
+
 // ─── 탭 바 ────────────────────────────────────────────────────────────────────
 
 const FILTER_LABELS: Record<AssetFilter, string> = {
@@ -156,6 +161,61 @@ function FilterTabs({ active, onChange }: FilterTabsProps): React.ReactElement {
   );
 }
 
+// ─── 정렬 기준 pill 버튼 바 ───────────────────────────────────────────────────
+
+const SORT_OPTIONS: { key: SortBy; label: string }[] = [
+  { key: 'gainers', label: '급등 🔥' },
+  { key: 'losers', label: '급락 📉' },
+  { key: 'volume', label: '거래량 💧' },
+  { key: 'marketcap', label: '시총 👑' },
+];
+
+interface SortTabsProps {
+  active: SortBy;
+  onChange: (s: SortBy) => void;
+}
+
+function SortTabs({ active, onChange }: SortTabsProps): React.ReactElement {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: '8px',
+        padding: '10px 16px',
+        background: 'white',
+        borderBottom: '1px solid #E2E8F0',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch' as React.CSSProperties['WebkitOverflowScrolling'],
+      }}
+      aria-label="정렬 기준"
+    >
+      {SORT_OPTIONS.map(({ key, label }) => {
+        const isActive = active === key;
+        return (
+          <button
+            key={key}
+            onClick={() => onChange(key)}
+            style={{
+              flexShrink: 0,
+              padding: '6px 14px',
+              borderRadius: '20px',
+              border: 'none',
+              background: isActive ? '#2563EB' : '#F1F5F9',
+              color: isActive ? 'white' : '#64748B',
+              fontSize: '13px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── 섹션 헤더 ────────────────────────────────────────────────────────────────
 
 interface SectionHeaderProps {
@@ -196,19 +256,16 @@ function SectionHeader({ title, count }: SectionHeaderProps): React.ReactElement
   );
 }
 
-// ─── 순위 카드 ────────────────────────────────────────────────────────────────
+// ─── 랭킹 리스트 (통합, 상위 10개) ──────────────────────────────────────────
 
-interface RankListProps {
+interface RankingListProps {
   items: RankItem[];
-  showVolume?: boolean;
-  filter: AssetFilter;
+  sortBy: SortBy;
   onNavigate: (item: RankItem) => void;
 }
 
-function RankList({ items, showVolume, filter, onNavigate }: RankListProps): React.ReactElement {
-  const filtered = filter === 'all' ? items : items.filter((i) => i.type === filter);
-
-  if (filtered.length === 0) {
+function RankingList({ items, sortBy, onNavigate }: RankingListProps): React.ReactElement {
+  if (items.length === 0) {
     return (
       <div
         style={{
@@ -223,6 +280,9 @@ function RankList({ items, showVolume, filter, onNavigate }: RankListProps): Rea
     );
   }
 
+  const showVolume = sortBy === 'volume';
+  const showMarketCap = sortBy === 'marketcap';
+
   return (
     <div
       style={{
@@ -232,11 +292,14 @@ function RankList({ items, showVolume, filter, onNavigate }: RankListProps): Rea
         overflow: 'hidden',
       }}
     >
-      {filtered.map((item, idx) => {
+      {items.map((item, idx) => {
         const isRise = item.changeRate > 0;
         const isFall = item.changeRate < 0;
-        const changeColor = isRise ? 'var(--kr-rise)' : isFall ? 'var(--kr-fall)' : '#6B7280';
+        const changeColor = isRise ? '#E84040' : isFall ? '#2563EB' : '#6B7280';
         const changeSign = isRise ? '+' : '';
+        const arrow = isRise ? ' ↑' : isFall ? ' ↓' : '';
+        const exchange = item.type === 'coin' ? '업비트' : '코스피';
+        const icon = item.type === 'coin' ? '🪙' : '🏢';
 
         return (
           <button
@@ -249,19 +312,19 @@ function RankList({ items, showVolume, filter, onNavigate }: RankListProps): Rea
               padding: '14px 16px',
               background: 'none',
               border: 'none',
-              borderBottom: idx < filtered.length - 1 ? '1px solid #F1F5F9' : 'none',
+              borderBottom: idx < items.length - 1 ? '1px solid #F1F5F9' : 'none',
               cursor: 'pointer',
               textAlign: 'left',
               gap: '12px',
             }}
           >
-            {/* 순위 */}
+            {/* 순위 번호 */}
             <span
               style={{
                 width: '20px',
                 fontSize: '14px',
                 fontWeight: 700,
-                color: idx < 3 ? '#0F172A' : '#94A3B8',
+                color: '#94A3B8',
                 flexShrink: 0,
                 textAlign: 'center',
               }}
@@ -269,39 +332,37 @@ function RankList({ items, showVolume, filter, onNavigate }: RankListProps): Rea
               {idx + 1}
             </span>
 
-            {/* 종목명 + 배지 */}
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
-              <span
-                style={{
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  color: '#0F172A',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {item.name}
-              </span>
-              <span
-                style={{
-                  flexShrink: 0,
-                  fontSize: '10px',
-                  color: '#64748B',
-                  background: '#F1F5F9',
-                  borderRadius: '4px',
-                  padding: '1px 6px',
-                }}
-              >
-                {item.type === 'coin' ? '코인' : '주식'}
+            {/* 아이콘 + 종목명 + 심볼·거래소 */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, gap: '2px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '14px' }}>{icon}</span>
+                <span
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    color: '#0F172A',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {item.name}
+                </span>
+              </div>
+              <span style={{ fontSize: '11px', color: '#94A3B8' }}>
+                {item.symbol} · {exchange}
               </span>
             </div>
 
-            {/* 가격 + 등락률 */}
+            {/* 가격 + 변동률 */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
               {showVolume ? (
-                <span style={{ fontSize: '12px', color: '#64748B' }}>
-                  거래량 {formatVolume(item.volume ?? 0)}
+                <span style={{ fontSize: '13px', color: '#475569' }}>
+                  {formatVolume(item.volume ?? 0)}
+                </span>
+              ) : showMarketCap ? (
+                <span style={{ fontSize: '13px', color: '#475569' }}>
+                  {(getMarketCap(item) / 1_000_000_000_000).toFixed(1)}조
                 </span>
               ) : (
                 <span style={{ fontSize: '13px', color: '#475569' }}>
@@ -315,7 +376,7 @@ function RankList({ items, showVolume, filter, onNavigate }: RankListProps): Rea
                   color: changeColor,
                 }}
               >
-                {changeSign}{item.changeRate.toFixed(2)}%
+                {changeSign}{item.changeRate.toFixed(2)}%{arrow}
               </span>
             </div>
           </button>
@@ -329,6 +390,7 @@ function RankList({ items, showVolume, filter, onNavigate }: RankListProps): Rea
 
 export default function ExplorePage(): React.ReactElement {
   const [filter, setFilter] = useState<AssetFilter>('all');
+  const [sortBy, setSortBy] = useState<SortBy>('gainers');
   const [viewMode, setViewMode] = useState<'list' | 'heatmap'>('list');
   const router = useRouter();
 
@@ -350,27 +412,31 @@ export default function ExplorePage(): React.ReactElement {
     });
   }, [prices]);
 
-  // 급등 TOP5: changeRate 내림차순
-  const gainers = useMemo<RankItem[]>(
-    () => [...allItems].sort((a, b) => b.changeRate - a.changeRate).slice(0, 5),
-    [allItems]
+  // assetFilter 적용
+  const filteredItems = useMemo<RankItem[]>(
+    () => (filter === 'all' ? allItems : allItems.filter((i) => i.type === filter)),
+    [allItems, filter]
   );
 
-  // 급락 TOP5: changeRate 오름차순
-  const losers = useMemo<RankItem[]>(
-    () => [...allItems].sort((a, b) => a.changeRate - b.changeRate).slice(0, 5),
-    [allItems]
-  );
-
-  // 거래량 TOP5: volume 내림차순 (volume 있는 항목만)
-  const volumeTop = useMemo<RankItem[]>(
-    () =>
-      [...allItems]
-        .filter((i) => i.volume !== undefined)
-        .sort((a, b) => (b.volume ?? 0) - (a.volume ?? 0))
-        .slice(0, 5),
-    [allItems]
-  );
+  // sortBy 기준으로 정렬 후 상위 10개
+  const rankedItems = useMemo<RankItem[]>(() => {
+    const sorted = [...filteredItems];
+    switch (sortBy) {
+      case 'gainers':
+        sorted.sort((a, b) => b.changeRate - a.changeRate);
+        break;
+      case 'losers':
+        sorted.sort((a, b) => a.changeRate - b.changeRate);
+        break;
+      case 'volume':
+        sorted.sort((a, b) => (b.volume ?? 0) - (a.volume ?? 0));
+        break;
+      case 'marketcap':
+        sorted.sort((a, b) => getMarketCap(b) - getMarketCap(a));
+        break;
+    }
+    return sorted.slice(0, 10);
+  }, [filteredItems, sortBy]);
 
   const handleNavigate = (item: RankItem) => {
     const path = item.type === 'coin'
@@ -384,9 +450,11 @@ export default function ExplorePage(): React.ReactElement {
     router.push(path);
   };
 
+  const sortLabel = SORT_OPTIONS.find((o) => o.key === sortBy)?.label ?? '';
+
   // 히트맵에 표시할 items: 현재 필터 기준 전체 allItems
   const heatmapItems = useMemo(
-    () => filter === 'all' ? allItems : allItems.filter(i => i.type === filter),
+    () => (filter === 'all' ? allItems : allItems.filter((i) => i.type === filter)),
     [allItems, filter]
   );
 
@@ -431,39 +499,25 @@ export default function ExplorePage(): React.ReactElement {
             </div>
           </div>
           <FilterTabs active={filter} onChange={setFilter} />
+          {viewMode === 'list' && (
+            <SortTabs active={sortBy} onChange={setSortBy} />
+          )}
         </header>
 
         {viewMode === 'heatmap' ? (
           <HeatmapView items={heatmapItems} onSelect={handleSelect} />
         ) : (
-          <>
-            {/* 급등 TOP5 */}
-            <section aria-label="오늘의 급등">
-              <SectionHeader
-                title="🔥 오늘의 급등"
-                count={filter === 'all' ? gainers.length : gainers.filter(i => i.type === filter).length}
-              />
-              <RankList items={gainers} filter={filter} onNavigate={handleNavigate} />
-            </section>
-
-            {/* 급락 TOP5 */}
-            <section aria-label="오늘의 급락">
-              <SectionHeader
-                title="📉 오늘의 급락"
-                count={filter === 'all' ? losers.length : losers.filter(i => i.type === filter).length}
-              />
-              <RankList items={losers} filter={filter} onNavigate={handleNavigate} />
-            </section>
-
-            {/* 거래량 급증 TOP5 */}
-            <section aria-label="거래량 급증">
-              <SectionHeader
-                title="📊 거래량 급증"
-                count={filter === 'all' ? volumeTop.length : volumeTop.filter(i => i.type === filter).length}
-              />
-              <RankList items={volumeTop} showVolume filter={filter} onNavigate={handleNavigate} />
-            </section>
-          </>
+          <section aria-label={`${sortLabel} 랭킹`}>
+            <SectionHeader
+              title={`${sortLabel} TOP10`}
+              count={rankedItems.length}
+            />
+            <RankingList
+              items={rankedItems}
+              sortBy={sortBy}
+              onNavigate={handleNavigate}
+            />
+          </section>
         )}
       </div>
 

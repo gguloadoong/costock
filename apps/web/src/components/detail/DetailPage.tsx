@@ -129,6 +129,45 @@ const MOCK_DOMINANCE: Record<string, string> = {
   'KRW-ADA': '0.96%',
 };
 
+// ─── 코인 토크노믹스 mock ──────────────────────────────────────────────────────
+
+const MOCK_MARKET_CAP_COIN: Record<string, string> = {
+  'KRW-BTC': '2,420조원',
+  'KRW-ETH': '650조원',
+  'KRW-XRP': '210조원',
+  'KRW-SOL': '398조원',
+};
+
+const MOCK_SUPPLY: Record<string, string> = {
+  'KRW-BTC': '2,100만 BTC',
+  'KRW-ETH': '1억 2천만 ETH',
+  'KRW-XRP': '1,000억 XRP',
+  'KRW-SOL': '5억 8천만 SOL',
+};
+
+// ─── 주식 재무 지표 mock ──────────────────────────────────────────────────────
+
+interface StockFinancials {
+  per: string;
+  pbr: string;
+  marketCap: string;
+  dividendYield: string;
+}
+
+const MOCK_STOCK_FINANCIALS: Record<string, StockFinancials> = {
+  '005930': { per: '15.2x', pbr: '1.8x', marketCap: '497조원', dividendYield: '2.4%' },
+  '000660': { per: '12.8x', pbr: '2.1x', marketCap: '144조원', dividendYield: '0.8%' },
+  '035420': { per: '28.4x', pbr: '3.4x', marketCap: '30조원', dividendYield: '0.2%' },
+  '035720': { per: '32.1x', pbr: '2.8x', marketCap: '18조원', dividendYield: '0%' },
+};
+
+const DEFAULT_STOCK_FINANCIALS: StockFinancials = {
+  per: '20.0x',
+  pbr: '2.0x',
+  marketCap: '-',
+  dividendYield: '-',
+};
+
 const COIN_NEWS_FALLBACK_URLS: Record<string, string> = {
   'KRW-BTC': 'https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC',
   'KRW-ETH': 'https://upbit.com/exchange?code=CRIX.UPBIT.KRW-ETH',
@@ -517,6 +556,64 @@ export function DetailPage({ symbol, assetType }: DetailPageProps): React.ReactE
           <MetricCard label={fourthMetricLabel} value={fourthMetricValue} />
         </div>
       </section>
+
+      {/* ── 토크노믹스 (코인 전용) ── */}
+      {assetType === 'coin' && (
+        <section style={{ padding: '16px' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#0F172A', margin: '0 0 12px' }}>
+            토크노믹스
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <MetricCard
+              label="시가총액"
+              value={MOCK_MARKET_CAP_COIN[symbol] ?? '-'}
+            />
+            <MetricCard
+              label="도미넌스"
+              value={MOCK_DOMINANCE[symbol] ?? '0.50%'}
+            />
+            <MetricCard
+              label="24시간 최고"
+              value={formatKRW(Math.round(currentPrice * 1.04))}
+            />
+            <MetricCard
+              label="24시간 최저"
+              value={formatKRW(Math.round(currentPrice * 0.96))}
+            />
+            <MetricCard
+              label="발행량"
+              value={MOCK_SUPPLY[symbol] ?? '-'}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* ── 재무 지표 (주식 전용) ── */}
+      {assetType === 'stock' && (
+        <section style={{ padding: '16px' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#0F172A', margin: '0 0 12px' }}>
+            재무 지표
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <MetricCard
+              label="PER"
+              value={(MOCK_STOCK_FINANCIALS[symbol] ?? DEFAULT_STOCK_FINANCIALS).per}
+            />
+            <MetricCard
+              label="PBR"
+              value={(MOCK_STOCK_FINANCIALS[symbol] ?? DEFAULT_STOCK_FINANCIALS).pbr}
+            />
+            <MetricCard
+              label="시가총액"
+              value={(MOCK_STOCK_FINANCIALS[symbol] ?? DEFAULT_STOCK_FINANCIALS).marketCap}
+            />
+            <MetricCard
+              label="배당수익률"
+              value={(MOCK_STOCK_FINANCIALS[symbol] ?? DEFAULT_STOCK_FINANCIALS).dividendYield}
+            />
+          </div>
+        </section>
+      )}
 
       {/* ── 알림 모달 ── */}
       {isAlertOpen && (

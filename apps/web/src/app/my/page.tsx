@@ -20,8 +20,9 @@ import { usePriceStream } from '@/hooks/usePriceStream';
 import type { PriceData } from '@/types/market';
 import { formatPriceSafe } from '@/design-system/utils/formatPrice';
 import { formatRate } from '@/design-system/utils/formatRate';
-import { getAlerts, removeAlert } from '@/lib/alertStorage';
+import { getAlerts, removeAlert, checkAlerts, markAlertTriggered } from '@/lib/alertStorage';
 import type { PriceAlert } from '@/lib/alertStorage';
+import { formatKRW } from '@/lib/formatters';
 import { useNotification } from '@/lib/useNotification';
 import { getHoldings, removeHolding, calcPnL } from '@/lib/holdingStorage';
 import type { Holding } from '@/lib/holdingStorage';
@@ -346,6 +347,25 @@ export default function MyPage(): React.ReactElement {
 
   const streamSymbols = useMemo(() => items.map((i) => i.id), [items]);
   const { prices: liveData } = usePriceStream(streamSymbols);
+
+  // 가격 알림 자동 체크 — liveData 갱신마다 실행
+  useEffect(() => {
+    if (liveData.size === 0) return;
+    liveData.forEach((priceData, symbol) => {
+      const triggered = checkAlerts(symbol, priceData.price);
+      for (const alert of triggered) {
+        markAlertTriggered(alert.id);
+        const conditionLabel = alert.condition === 'above' ? '이상' : '이하';
+        showToast({
+          text: `🔔 ${alert.name} ${conditionLabel} ${alert.targetPrice.toLocaleString()}원 도달!`,
+          type: 'success',
+        });
+      }
+    });
+    // 트리거된 알림이 있으면 알림 목록 동기화
+    setAlerts(getAlerts().filter((a) => !a.triggered));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveData]);
   const { permission: notifPermission, requestPermission } = useNotification();
 
   // 수익률 요약 계산
@@ -506,29 +526,32 @@ export default function MyPage(): React.ReactElement {
                 background: 'white',
                 borderRadius: '16px',
                 margin: '0 16px 8px',
-                padding: '32px 16px',
+                padding: '40px 16px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '8px',
+                gap: '10px',
               }}
             >
-              <span style={{ fontSize: '32px' }}>💼</span>
-              <p style={{ fontSize: '14px', color: '#64748B', margin: 0, textAlign: 'center' }}>
-                보유 종목을 등록하면 수익률을 확인할 수 있어요
+              <span style={{ fontSize: '40px' }}>💼</span>
+              <p style={{ fontSize: '15px', fontWeight: 600, color: '#0F172A', margin: 0, textAlign: 'center' }}>
+                아직 보유 종목이 없어요
+              </p>
+              <p style={{ fontSize: '13px', color: '#64748B', margin: 0, textAlign: 'center' }}>
+                종목 상세에서 + 매수 버튼으로 추가하세요
               </p>
             </div>
           ) : (
             <>
-              {/* 총 투자금액 합계 */}
+              {/* 보유 종목 요약 카드 */}
               {(() => {
                 const totalInvest = holdings.reduce((sum, h) => sum + h.avgPrice * h.quantity, 0);
-                const totalCurrent = holdings.reduce((sum, h) => {
+                const totalEval = holdings.reduce((sum, h) => {
                   const live = liveData.get(h.symbol);
                   const price = live?.price ?? h.avgPrice;
                   return sum + price * h.quantity;
                 }, 0);
-                const totalPnl = totalCurrent - totalInvest;
+                const totalPnl = totalEval - totalInvest;
                 const totalPnlRate = totalInvest > 0 ? (totalPnl / totalInvest) * 100 : 0;
                 const pnlColor = totalPnl > 0 ? '#E84040' : totalPnl < 0 ? '#2563EB' : '#6B7280';
                 return (
@@ -538,29 +561,78 @@ export default function MyPage(): React.ReactElement {
                       borderRadius: '16px',
                       margin: '0 16px 8px',
                       padding: '16px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
                     }}
                   >
-                    <div>
-                      <p style={{ fontSize: '12px', color: '#94A3B8', margin: '0 0 4px', fontWeight: 500 }}>
-                        총 투자금액
-                      </p>
-                      <span style={{ fontSize: '18px', fontWeight: 700, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>
-                        {totalInvest.toLocaleString()}원
-                      </span>
+                    <p style={{ fontSize: '12px', color: '#94A3B8', margin: '0 0 12px', fontWeight: 500 }}>
+                      내 보유 종목 요약
+                    </p>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                      {/* 총 평가금액 */}
+                      <div
+                        style={{
+                          flex: 1,
+                          background: '#F8FAFC',
+                          borderRadius: '10px',
+                          padding: '10px 12px',
+                        }}
+                      >
+                        <p style={{ fontSize: '11px', color: '#94A3B8', margin: '0 0 4px', fontWeight: 500 }}>
+                          총 평가금액
+                        </p>
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>
+                          {formatKRW(totalEval)}
+                        </span>
+                      </div>
+                      {/* 총 매입금액 */}
+                      <div
+                        style={{
+                          flex: 1,
+                          background: '#F8FAFC',
+                          borderRadius: '10px',
+                          padding: '10px 12px',
+                        }}
+                      >
+                        <p style={{ fontSize: '11px', color: '#94A3B8', margin: '0 0 4px', fontWeight: 500 }}>
+                          총 매입금액
+                        </p>
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: '#0F172A', fontVariantNumeric: 'tabular-nums' }}>
+                          {formatKRW(totalInvest)}
+                        </span>
+                      </div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <p style={{ fontSize: '12px', color: '#94A3B8', margin: '0 0 4px', fontWeight: 500 }}>
-                        평가손익
-                      </p>
-                      <span style={{ fontSize: '18px', fontWeight: 700, color: pnlColor, fontVariantNumeric: 'tabular-nums' }}>
-                        {totalPnl >= 0 ? '+' : ''}{totalPnl.toLocaleString()}원
-                      </span>
-                      <span style={{ fontSize: '12px', fontWeight: 500, color: pnlColor, marginLeft: '6px', fontVariantNumeric: 'tabular-nums' }}>
-                        ({totalPnlRate >= 0 ? '+' : ''}{totalPnlRate.toFixed(2)}%)
-                      </span>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {/* 평가손익 */}
+                      <div
+                        style={{
+                          flex: 1,
+                          background: '#F8FAFC',
+                          borderRadius: '10px',
+                          padding: '10px 12px',
+                        }}
+                      >
+                        <p style={{ fontSize: '11px', color: '#94A3B8', margin: '0 0 4px', fontWeight: 500 }}>
+                          평가손익
+                        </p>
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: pnlColor, fontVariantNumeric: 'tabular-nums' }}>
+                          {totalPnl >= 0 ? '+' : '-'}{formatKRW(Math.abs(totalPnl))}
+                        </span>
+                      </div>
+                      {/* 수익률 */}
+                      <div
+                        style={{
+                          flex: 1,
+                          background: '#F8FAFC',
+                          borderRadius: '10px',
+                          padding: '10px 12px',
+                        }}
+                      >
+                        <p style={{ fontSize: '11px', color: '#94A3B8', margin: '0 0 4px', fontWeight: 500 }}>
+                          수익률
+                        </p>
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: pnlColor, fontVariantNumeric: 'tabular-nums' }}>
+                          {totalPnlRate >= 0 ? '+' : ''}{totalPnlRate.toFixed(2)}%
+                        </span>
+                      </div>
                     </div>
                   </div>
                 );
