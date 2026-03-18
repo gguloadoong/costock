@@ -42,7 +42,26 @@ interface SectorData {
   topStock: string;
 }
 
+// ─── 글로벌 지수 타입 ──────────────────────────────────────────────────────────
+
+interface GlobalIndexData {
+  id: string;
+  name: string;
+  value: number;
+  changeRate: number;
+  region: string;
+}
+
 // ─── 목 데이터 ─────────────────────────────────────────────────────────────────
+
+const GLOBAL_INDICES: GlobalIndexData[] = [
+  { id: 'sp500', name: 'S&P 500', value: 5_234.18, changeRate: 1.24, region: '🇺🇸' },
+  { id: 'nasdaq', name: '나스닥 100', value: 18_412.35, changeRate: 1.82, region: '🇺🇸' },
+  { id: 'dow', name: '다우존스', value: 39_208.14, changeRate: 0.94, region: '🇺🇸' },
+  { id: 'nikkei', name: '닛케이225', value: 38_912.50, changeRate: -0.38, region: '🇯🇵' },
+  { id: 'kospi200', name: 'KOSPI200', value: 385.20, changeRate: 0.65, region: '🇰🇷' },
+  { id: 'hsi', name: '항셍지수', value: 17_284.32, changeRate: -0.82, region: '🇭🇰' },
+];
 
 const MOCK_INDICES: IndexData[] = [
   { id: 'kospi', name: 'KOSPI', value: 2_612.35, change: 18.42, changeRate: 0.71, unit: 'pt' },
@@ -505,6 +524,146 @@ function SectorRow({ data, isLast }: SectorRowProps): React.ReactElement {
   );
 }
 
+// ─── 미국장 상태 ──────────────────────────────────────────────────────────────
+
+function getUSMarketStatus(): { isOpen: boolean; label: string } {
+  const now = new Date();
+  const utcMinutes =
+    (now.getUTCHours() + now.getUTCMinutes() / 60) * 60 + (now.getUTCMinutes() % 60);
+  // EST = UTC-5 (서머타임 미반영)
+  const estHours = now.getUTCHours() - 5;
+  const estHoursNorm = ((estHours % 24) + 24) % 24;
+  const estMinutes = estHoursNorm * 60 + now.getUTCMinutes();
+  // 09:30 ~ 16:00 EST
+  const marketOpen = 9 * 60 + 30;
+  const marketClose = 16 * 60;
+  const isOpen = estMinutes >= marketOpen && estMinutes < marketClose;
+  return {
+    isOpen,
+    label: isOpen ? '🟢 미국장 개장 중' : '🔴 미국장 마감',
+  };
+}
+
+// ─── 글로벌 지수 카드 ─────────────────────────────────────────────────────────
+
+interface GlobalIndexCardProps {
+  data: GlobalIndexData;
+}
+
+function GlobalIndexCard({ data }: GlobalIndexCardProps): React.ReactElement {
+  const isRise = data.changeRate > 0;
+  const isFall = data.changeRate < 0;
+  const changeColor = isRise ? '#E84040' : isFall ? '#2563EB' : '#6B7280';
+  const changeSign = isRise ? '+' : '';
+
+  return (
+    <div
+      style={{
+        flexShrink: 0,
+        width: '120px',
+        background: 'white',
+        borderRadius: '12px',
+        padding: '12px',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+      }}
+    >
+      <p
+        style={{
+          fontSize: '11px',
+          color: '#6B7280',
+          margin: '0 0 4px',
+          fontWeight: 500,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
+        {data.region} {data.name}
+      </p>
+      <p
+        style={{
+          fontSize: '15px',
+          fontWeight: 700,
+          color: '#0F172A',
+          margin: '0 0 2px',
+        }}
+      >
+        {data.value.toLocaleString('ko-KR', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}
+      </p>
+      <p
+        style={{
+          fontSize: '13px',
+          fontWeight: 600,
+          color: changeColor,
+          margin: 0,
+        }}
+      >
+        {changeSign}{data.changeRate.toFixed(2)}%
+      </p>
+    </div>
+  );
+}
+
+// ─── 글로벌 지수 섹션 ─────────────────────────────────────────────────────────
+
+function GlobalIndicesSection(): React.ReactElement {
+  const { isOpen, label } = getUSMarketStatus();
+
+  return (
+    <section aria-label="글로벌 지수">
+      {/* 섹션 헤더 */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '20px 16px 8px',
+        }}
+      >
+        <h2
+          style={{
+            fontSize: '16px',
+            fontWeight: 600,
+            color: '#0F172A',
+            margin: 0,
+          }}
+        >
+          🌍 글로벌 지수
+        </h2>
+        <span
+          style={{
+            fontSize: '11px',
+            fontWeight: 500,
+            color: isOpen ? '#16A34A' : '#6B7280',
+            background: isOpen ? '#F0FDF4' : '#F1F5F9',
+            borderRadius: '20px',
+            padding: '3px 8px',
+          }}
+        >
+          {label}
+        </span>
+      </div>
+      {/* 수평 스크롤 카드 목록 */}
+      <div
+        style={{
+          display: 'flex',
+          overflowX: 'auto',
+          gap: '12px',
+          padding: '0 16px 8px',
+          scrollbarWidth: 'none',
+        }}
+      >
+        {GLOBAL_INDICES.map((idx) => (
+          <GlobalIndexCard key={idx.id} data={idx} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 // ─── MarketPage ───────────────────────────────────────────────────────────────
 
 const REFRESH_INTERVAL_MS = 30_000;
@@ -641,6 +800,9 @@ export default function MarketPage(): React.ReactElement {
           </div>
           <BtcDominanceCard value={MOCK_BTC_DOMINANCE} />
         </section>
+
+        {/* 글로벌 지수 */}
+        <GlobalIndicesSection />
 
         {/* 환율 */}
         <section aria-label="환율">

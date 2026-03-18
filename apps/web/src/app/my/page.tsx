@@ -318,6 +318,164 @@ function WatchlistRow({ item, isLast, onRemove, price, changeRate }: WatchlistRo
   );
 }
 
+// ─── 포트폴리오 히스토리 라인차트 ────────────────────────────────────────────────
+
+function generateMockHistory(currentValue: number): { date: string; value: number }[] {
+  // 결정론적 seed 기반 ±2% 랜덤 워크 (7일 전 → 오늘)
+  const seed = Math.abs(Math.round(currentValue)) % 9999 + 1;
+  let pseudo = seed;
+  const rand = () => {
+    pseudo = (pseudo * 1664525 + 1013904223) & 0x7fffffff;
+    return pseudo / 0x7fffffff; // 0~1
+  };
+
+  const points: { date: string; value: number }[] = [];
+  let val = currentValue;
+  // 7일 전부터 오늘까지 순서대로 배치하기 위해 뒤에서부터 역산
+  // 오늘(index 6)이 currentValue, 과거는 역방향으로 랜덤 워크
+  const values: number[] = [currentValue];
+  for (let i = 0; i < 6; i++) {
+    const change = (rand() * 4 - 2) / 100; // ±2%
+    val = val / (1 + change);
+    values.unshift(val);
+  }
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    const label = d.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }); // "3/13"
+    points.push({ date: label, value: values[i] });
+  }
+  return points;
+}
+
+interface PortfolioHistoryChartProps {
+  currentValue: number;
+}
+
+function PortfolioHistoryChart({ currentValue }: PortfolioHistoryChartProps): React.ReactElement | null {
+  if (currentValue <= 0) return null;
+
+  const history = generateMockHistory(currentValue);
+  const values = history.map((h) => h.value);
+  const minVal = Math.min(...values);
+  const maxVal = Math.max(...values);
+  const range = maxVal - minVal || 1;
+
+  // viewBox: 0 0 320 80, 패딩 top/bottom 8px for label breathing room
+  const W = 320;
+  const H = 60; // 차트 영역 높이 (라벨 제외)
+  const TOP_PAD = 6;
+  const BOT_PAD = 4;
+  const chartH = H - TOP_PAD - BOT_PAD;
+
+  const toX = (i: number) => (i / (history.length - 1)) * W;
+  const toY = (v: number) => TOP_PAD + chartH - ((v - minVal) / range) * chartH;
+
+  const linePath = history
+    .map((h, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(h.value).toFixed(1)}`)
+    .join(' ');
+
+  // 그라데이션 fill — 라인 아래 닫기
+  const fillPath =
+    linePath +
+    ` L${W},${H} L0,${H} Z`;
+
+  const firstVal = history[0].value;
+  const lastVal = history[history.length - 1].value;
+  const changeRate = firstVal > 0 ? ((lastVal - firstVal) / firstVal) * 100 : 0;
+  const isProfit = changeRate >= 0;
+  const lineColor = isProfit ? '#E84040' : '#2563EB';
+  const gradientId = `phc-grad-${isProfit ? 'r' : 'b'}`;
+
+  const rateDisplay = `${changeRate >= 0 ? '+' : ''}${changeRate.toFixed(2)}%`;
+
+  return (
+    <div
+      style={{
+        background: 'white',
+        borderRadius: '16px',
+        margin: '0 16px 8px',
+        padding: '16px',
+      }}
+    >
+      {/* 헤더 */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+        <p style={{ fontSize: '12px', color: '#94A3B8', margin: 0, fontWeight: 500 }}>
+          7일 수익률 추이
+        </p>
+        <span
+          style={{
+            fontSize: '13px',
+            fontWeight: 700,
+            color: lineColor,
+            fontVariantNumeric: 'tabular-nums',
+          }}
+        >
+          {rateDisplay}
+        </span>
+      </div>
+
+      {/* SVG 차트 */}
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        width="100%"
+        height="60"
+        style={{ display: 'block', overflow: 'visible' }}
+        aria-hidden="true"
+      >
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={lineColor} stopOpacity={0.15} />
+            <stop offset="100%" stopColor={lineColor} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        {/* 그라데이션 fill */}
+        <path d={fillPath} fill={`url(#${gradientId})`} />
+        {/* 라인 */}
+        <path
+          d={linePath}
+          fill="none"
+          stroke={lineColor}
+          strokeWidth="1.8"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+        {/* 오늘 끝점 dot */}
+        <circle
+          cx={toX(history.length - 1).toFixed(1)}
+          cy={toY(lastVal).toFixed(1)}
+          r="3"
+          fill={lineColor}
+        />
+      </svg>
+
+      {/* X축 레이블 */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          marginTop: '4px',
+        }}
+      >
+        {history.map((h) => (
+          <span
+            key={h.date}
+            style={{
+              fontSize: '10px',
+              color: '#94A3B8',
+              fontVariantNumeric: 'tabular-nums',
+              lineHeight: 1,
+            }}
+          >
+            {h.date}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── MyPage ───────────────────────────────────────────────────────────────────
 
 export default function MyPage(): React.ReactElement {
@@ -555,6 +713,7 @@ export default function MyPage(): React.ReactElement {
                 const totalPnlRate = totalInvest > 0 ? (totalPnl / totalInvest) * 100 : 0;
                 const pnlColor = totalPnl > 0 ? '#E84040' : totalPnl < 0 ? '#2563EB' : '#6B7280';
                 return (
+                  <>
                   <div
                     style={{
                       background: 'white',
@@ -635,6 +794,8 @@ export default function MyPage(): React.ReactElement {
                       </div>
                     </div>
                   </div>
+                  <PortfolioHistoryChart currentValue={totalEval} />
+                  </>
                 );
               })()}
 
