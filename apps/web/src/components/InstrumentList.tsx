@@ -4,6 +4,7 @@ import React from 'react';
 import { PriceCard, PriceCardSkeleton } from '@/design-system';
 import type { HomeTab, InstrumentWithPrice } from '@/types/market';
 import { SwipeableItem } from '@/components/SwipeableItem';
+import { usePriceFlash } from '@/lib/usePriceFlash';
 
 export interface InstrumentListProps {
   instruments: InstrumentWithPrice[];
@@ -17,6 +18,63 @@ export interface InstrumentListProps {
 }
 
 const SKELETON_COUNT = 5;
+
+interface InstrumentItemProps {
+  item: InstrumentWithPrice;
+  liveData: Map<string, { price: number; change: number; changeRate: number }>;
+  onSelect: (symbol: string) => void;
+  watchlistIds?: Set<string>;
+  onWatchlistToggle?: (item: InstrumentWithPrice) => void;
+  showSwipeDelete?: boolean;
+}
+
+function InstrumentItem({
+  item,
+  liveData,
+  onSelect,
+  watchlistIds,
+  onWatchlistToggle,
+  showSwipeDelete,
+}: InstrumentItemProps): React.ReactElement {
+  const live = liveData.get(item.symbol);
+  const price = live?.price ?? item.price;
+  const change = live?.change ?? item.change;
+  const changeRate = live?.changeRate ?? item.changeRate;
+
+  const flash = usePriceFlash(price);
+  const decimals = item.type === 'coin' && price < 100 ? 2 : 0;
+
+  const flashClass = flash === 'rise' ? 'price-flash-rise' : flash === 'fall' ? 'price-flash-fall' : '';
+
+  const card = (
+    <div className={[flashClass, 'price-value'].filter(Boolean).join(' ')}>
+      <PriceCard
+        symbol={item.symbol}
+        name={item.name}
+        price={price}
+        change={change}
+        changeRate={changeRate}
+        volume={item.volume}
+        exchange={item.exchange}
+        type={item.type}
+        decimals={decimals}
+        onClick={() => onSelect(item.symbol)}
+        isWatchlisted={watchlistIds?.has(item.symbol)}
+        onWatchlistToggle={onWatchlistToggle ? () => onWatchlistToggle(item) : undefined}
+      />
+    </div>
+  );
+
+  if (showSwipeDelete && onWatchlistToggle) {
+    return (
+      <SwipeableItem onDelete={() => onWatchlistToggle(item)}>
+        {card}
+      </SwipeableItem>
+    );
+  }
+
+  return card;
+}
 
 export function InstrumentList({
   instruments,
@@ -80,47 +138,17 @@ export function InstrumentList({
       role="tabpanel"
       style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px' }}
     >
-      {instruments.map((item) => {
-        // 실시간 가격이 있으면 덮어쓰기
-        const live = liveData.get(item.symbol);
-        const price = live?.price ?? item.price;
-        const change = live?.change ?? item.change;
-        const changeRate = live?.changeRate ?? item.changeRate;
-
-        // 코인은 가격 크기에 따라 소수점 조정
-        const decimals = item.type === 'coin' && price < 100 ? 2 : 0;
-
-        const card = (
-          <PriceCard
-            key={item.symbol}
-            symbol={item.symbol}
-            name={item.name}
-            price={price}
-            change={change}
-            changeRate={changeRate}
-            volume={item.volume}
-            exchange={item.exchange}
-            type={item.type}
-            decimals={decimals}
-            onClick={() => onSelect(item.symbol)}
-            isWatchlisted={watchlistIds?.has(item.symbol)}
-            onWatchlistToggle={onWatchlistToggle ? () => onWatchlistToggle(item) : undefined}
-          />
-        );
-
-        if (showSwipeDelete && onWatchlistToggle) {
-          return (
-            <SwipeableItem
-              key={item.symbol}
-              onDelete={() => onWatchlistToggle(item)}
-            >
-              {card}
-            </SwipeableItem>
-          );
-        }
-
-        return card;
-      })}
+      {instruments.map((item) => (
+        <InstrumentItem
+          key={item.symbol}
+          item={item}
+          liveData={liveData}
+          onSelect={onSelect}
+          watchlistIds={watchlistIds}
+          onWatchlistToggle={onWatchlistToggle}
+          showSwipeDelete={showSwipeDelete}
+        />
+      ))}
     </div>
   );
 }
