@@ -91,6 +91,60 @@ export async function wsRoutes(app: FastifyInstance) {
     kafkaConsumer = null
   }
 
+  // ── 개발 환경 Mock 가격 시뮬레이터 ─────────────────────────────────────
+  // Kafka 연결 실패 시(로컬 개발) 브라운 운동 기반 가격 시뮬레이션으로 대체
+  if (kafkaConsumer === null) {
+    // 종목별 기준가 (실제 가격 범위 반영)
+    const BASE_PRICES: Record<string, number> = {
+      '005930':  75_000,   // 삼성전자
+      '000660': 180_000,   // SK하이닉스
+      '035720':  45_000,   // 카카오
+      '035420': 220_000,   // NAVER
+      'BTC':  90_000_000,  // 비트코인 (원화)
+      'ETH':   4_500_000,  // 이더리움
+      'XRP':        800,   // 리플
+    }
+
+    // 현재 시뮬레이션 가격 상태 (브라운 운동 누적)
+    const simPrices: Record<string, number> = { ...BASE_PRICES }
+
+    setInterval(() => {
+      if (subscriptionMap.size === 0) return
+
+      for (const symbol of subscriptionMap.keys()) {
+        const base = BASE_PRICES[symbol] ?? 10_000
+        const current = simPrices[symbol] ?? base
+
+        // ±0.5% 범위의 랜덤 브라운 운동
+        const pct = (Math.random() - 0.5) * 0.01   // -0.005 ~ +0.005
+        const next = Math.max(base * 0.5, current * (1 + pct))
+        simPrices[symbol] = next
+
+        const price      = Math.round(next)
+        const change     = Math.round(next - base)
+        const changeRate = parseFloat(((next - base) / base * 100).toFixed(2))
+        // volume: 기준가의 0.01~0.1% 수준
+        const volume24h  = Math.round(base * (0.0001 + Math.random() * 0.0009))
+
+        const outbound = JSON.stringify({
+          type:       'price',
+          symbol,
+          price,
+          change,
+          changeRate,
+          volume24h,
+          timestamp:  Date.now(),
+          assetType:  symbol.length === 6 && /^\d+$/.test(symbol) ? 'stock' : 'crypto',
+          source:     'mock',
+        })
+
+        broadcastToSubscribers(symbol, outbound)
+      }
+    }, 1_000) // 1초 간격
+
+    logger.info('Mock 가격 시뮬레이터 활성화 (개발 환경)')
+  }
+
   if (kafkaConsumer !== null) await kafkaConsumer.run({
     eachMessage: async ({ topic, message }) => {
       if (!message.value) return

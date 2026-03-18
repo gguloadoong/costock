@@ -22,6 +22,7 @@ import { formatPriceSafe } from '@/design-system/utils/formatPrice';
 import { formatRate } from '@/design-system/utils/formatRate';
 import { getAlerts, removeAlert } from '@/lib/alertStorage';
 import type { PriceAlert } from '@/lib/alertStorage';
+import { useNotification } from '@/lib/useNotification';
 
 // ─── 관심종목 현황 요약 카드 ──────────────────────────────────────────────────
 
@@ -337,6 +338,17 @@ export default function MyPage(): React.ReactElement {
 
   const streamSymbols = useMemo(() => items.map((i) => i.id), [items]);
   const { prices: liveData } = usePriceStream(streamSymbols);
+  const { permission: notifPermission, requestPermission } = useNotification();
+
+  // 수익률 요약 계산
+  const profitSummary = useMemo(() => {
+    if (!loaded || items.length === 0) return null;
+    const rates = items.map((i) => liveData.get(i.id)?.changeRate ?? 0);
+    const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+    const riseCount = rates.filter((r) => r > 0).length;
+    const fallCount = rates.filter((r) => r < 0).length;
+    return { avgRate, riseCount, fallCount };
+  }, [loaded, items, liveData]);
 
   const handleRemove = useCallback(async (id: string) => {
     await removeFromWatchlist(id);
@@ -562,6 +574,55 @@ export default function MyPage(): React.ReactElement {
           )}
         </section>
 
+        {/* 수익률 요약 섹션 */}
+        {profitSummary !== null && (
+          <section aria-label="수익률 요약">
+            <SectionHeader title="📊 수익률 요약" />
+            <div
+              style={{
+                background: 'white',
+                borderRadius: '16px',
+                margin: '0 16px 8px',
+                padding: '16px',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '12px', color: '#94A3B8', fontWeight: 500 }}>평균 변동률</span>
+                <span
+                  style={{
+                    fontSize: '20px',
+                    fontWeight: 700,
+                    color:
+                      profitSummary.avgRate > 0
+                        ? 'var(--kr-rise, #E84040)'
+                        : profitSummary.avgRate < 0
+                        ? 'var(--kr-fall, #2563EB)'
+                        : '#6B7280',
+                  }}
+                >
+                  {profitSummary.avgRate > 0 ? '+' : ''}{profitSummary.avgRate.toFixed(2)}%
+                </span>
+              </div>
+              <div style={{ width: '1px', height: '40px', background: '#E2E8F0', flexShrink: 0 }} />
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '12px', color: '#94A3B8', fontWeight: 500 }}>상승</span>
+                <span style={{ fontSize: '20px', fontWeight: 700, color: 'var(--kr-rise, #E84040)' }}>
+                  {profitSummary.riseCount}개
+                </span>
+              </div>
+              <div style={{ width: '1px', height: '40px', background: '#E2E8F0', flexShrink: 0 }} />
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '12px', color: '#94A3B8', fontWeight: 500 }}>하락</span>
+                <span style={{ fontSize: '20px', fontWeight: 700, color: 'var(--kr-fall, #2563EB)' }}>
+                  {profitSummary.fallCount}개
+                </span>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* 공유 URL 섹션 */}
         <section aria-label="관심목록 공유">
           <SectionHeader title="🔗 관심목록 공유" />
@@ -594,6 +655,86 @@ export default function MyPage(): React.ReactElement {
             >
               {copied ? '복사됨 ✓' : 'URL 복사'}
             </button>
+          </div>
+        </section>
+
+        {/* 설정 섹션 */}
+        <section aria-label="설정">
+          <SectionHeader title="⚙️ 설정" />
+          <div
+            style={{
+              background: 'white',
+              borderRadius: '16px',
+              margin: '0 16px 8px',
+              overflow: 'hidden',
+            }}
+          >
+            {/* 가격 알림 */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '14px 16px',
+                borderBottom: '1px solid #F1F5F9',
+              }}
+            >
+              <span style={{ fontSize: '14px', color: '#0F172A' }}>🔔 가격 알림</span>
+              {notifPermission === 'granted' ? (
+                <span style={{ fontSize: '13px', color: '#16A34A', fontWeight: 500 }}>
+                  알림 켜짐
+                </span>
+              ) : notifPermission === 'denied' ? (
+                <span style={{ fontSize: '13px', color: '#94A3B8' }}>
+                  브라우저 설정에서 허용
+                </span>
+              ) : (
+                <button
+                  onClick={() => void requestPermission()}
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: '#2563EB',
+                    color: 'white',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                  }}
+                >
+                  알림 허용
+                </button>
+              )}
+            </div>
+
+            {/* 다크 모드 */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '14px 16px',
+                borderBottom: '1px solid #F1F5F9',
+              }}
+            >
+              <span style={{ fontSize: '14px', color: '#94A3B8' }}>🌙 다크 모드</span>
+              <span style={{ fontSize: '13px', color: '#94A3B8' }}>준비 중</span>
+            </div>
+
+            {/* 앱 정보 */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '14px 16px',
+              }}
+            >
+              <span style={{ fontSize: '14px', color: '#0F172A' }}>📱 앱 정보</span>
+              <span style={{ fontSize: '13px', color: '#64748B', fontWeight: 500 }}>
+                v0.1.0
+              </span>
+            </div>
           </div>
         </section>
 

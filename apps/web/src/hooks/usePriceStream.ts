@@ -18,6 +18,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import type { LiveStatus } from '@/design-system';
 import type { PriceData, WsInboundMessage, WsOutboundMessage } from '@/types/market';
 import { validatePriceUpdate } from '../design-system/utils/validatePriceUpdate';
+import { checkAlerts, markAlertTriggered } from '@/lib/alertStorage';
 
 // ─── 상수 ─────────────────────────────────────────────────────────────────────
 
@@ -142,6 +143,19 @@ export function usePriceStream(
           next.set(update.symbol, update);
           return next;
         });
+
+        // 가격 알림 체크 및 브라우저 알림 발송
+        const triggered = checkAlerts(update.symbol, update.price);
+        for (const alert of triggered) {
+          markAlertTriggered(alert.id);
+          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            const directionLabel = alert.condition === 'above' ? '이상' : '이하';
+            new Notification(`${alert.name} 가격 알림`, {
+              body: `${alert.targetPrice.toLocaleString()}원 ${directionLabel} 도달 (현재 ${update.price.toLocaleString()}원)`,
+              icon: '/icon.svg',
+            });
+          }
+        }
       }
       // heartbeat는 stale 타이머 리셋만 처리 (위에서 이미 처리됨)
     };

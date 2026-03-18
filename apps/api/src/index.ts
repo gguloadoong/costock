@@ -96,11 +96,37 @@ async function buildApp() {
   await app.register(newsRoutes, { prefix: '/api/v1' })
 
   // 헬스체크 (로드밸런서 타겟 그룹 헬스체크용)
-  app.get('/health', { logLevel: 'silent' }, async () => ({
-    status: 'ok',
-    ts: new Date().toISOString(),
-    version: process.env.npm_package_version ?? '0.1.0',
-  }))
+  app.get('/health', { logLevel: 'silent' }, async () => {
+    const services: { database: 'ok' | 'error'; redis: 'ok' | 'error' } = {
+      database: 'ok',
+      redis: 'ok',
+    }
+
+    // DB ping
+    try {
+      const client = await app.db.connect()
+      await client.query('SELECT 1')
+      client.release()
+    } catch {
+      services.database = 'error'
+    }
+
+    // Redis ping
+    try {
+      await app.redis.ping()
+    } catch {
+      services.redis = 'error'
+    }
+
+    const degraded = services.database === 'error' || services.redis === 'error'
+
+    return {
+      status: degraded ? 'degraded' : 'ok',
+      timestamp: new Date().toISOString(),
+      version: process.env.npm_package_version ?? '0.1.0',
+      services,
+    }
+  })
 
   return app
 }
