@@ -22,6 +22,7 @@ import { AlertModal } from '@/components/AlertModal';
 import { HoldingModal } from '@/components/HoldingModal';
 import { PriceChange } from '@/components/PriceChange';
 import { formatKRW, formatVolume } from '@/lib/formatters';
+import { shareAsset } from '@/lib/shareUrl';
 
 // ─── 타입 ─────────────────────────────────────────────────────────────────────
 
@@ -299,15 +300,15 @@ export function DetailPage({ symbol, assetType }: DetailPageProps): React.ReactE
 
   // 공유
   const handleShare = useCallback(async () => {
-    const url = window.location.href;
-    const text = `${instrumentName} 실시간 가격 — CoStock`;
-    if (navigator.share) {
-      await navigator.share({ title: 'CoStock', text, url }).catch(() => {});
-    } else {
+    try {
+      await shareAsset(symbol, instrumentName, assetType, currentPrice);
+    } catch {
+      // Web Share API 실패 또는 미지원 — URL 클립보드 복사 fallback
+      const url = window.location.href;
       await navigator.clipboard.writeText(url).catch(() => {});
-      showToast({ text: 'URL 복사됨', type: 'success' });
+      showToast({ text: '링크 복사됨!', type: 'success' });
     }
-  }, [instrumentName]);
+  }, [symbol, instrumentName, assetType, currentPrice]);
 
   // 페이지 타이틀 업데이트
   useEffect(() => {
@@ -473,12 +474,10 @@ export function DetailPage({ symbol, assetType }: DetailPageProps): React.ReactE
               color: '#64748B',
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="18" cy="5" r="3"/>
-              <circle cx="6" cy="12" r="3"/>
-              <circle cx="18" cy="19" r="3"/>
-              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+              <polyline points="16 6 12 2 8 6"/>
+              <line x1="12" y1="2" x2="12" y2="15"/>
             </svg>
           </button>
           <button
@@ -731,6 +730,9 @@ export function DetailPage({ symbol, assetType }: DetailPageProps): React.ReactE
       {/* ── 관련 종목 섹션 ── */}
       <RelatedSymbolsSection symbol={symbol} assetType={assetType} />
 
+      {/* ── 외부 링크 섹션 ── */}
+      <ExternalLinksSection symbol={symbol} assetType={assetType} />
+
       {/* ── 하단 고정 CTA ── */}
       <div
         style={{
@@ -793,6 +795,85 @@ export function DetailPage({ symbol, assetType }: DetailPageProps): React.ReactE
   );
 }
 
+// ─── ExternalLinksSection ─────────────────────────────────────────────────────
+
+interface ExternalLink {
+  label: string;
+  url: string;
+  emoji: string;
+}
+
+function ExternalLinksSection({
+  symbol,
+  assetType,
+}: {
+  symbol: string;
+  assetType: 'stock' | 'coin';
+}): React.ReactElement {
+  const links: ExternalLink[] = assetType === 'stock'
+    ? [
+        {
+          emoji: '📈',
+          label: '토스증권에서 보기',
+          url: `https://tossinvest.com/stocks/${symbol}`,
+        },
+        {
+          emoji: '🏦',
+          label: '키움증권 HTS',
+          url: `https://m.kiwoom.com/m/stock/stockMain?stcTcod=${symbol}`,
+        },
+        {
+          emoji: '🔍',
+          label: '네이버 금융',
+          url: `https://finance.naver.com/item/main.nhn?code=${symbol}`,
+        },
+      ]
+    : [
+        {
+          emoji: '🪙',
+          label: '업비트에서 거래',
+          url: `https://upbit.com/exchange?code=CRIX.UPBIT.${symbol}`,
+        },
+      ];
+
+  return (
+    <section style={{ padding: '16px' }}>
+      <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#0F172A', margin: '0 0 12px' }}>
+        외부 링크
+      </h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {links.map((link) => (
+          <a
+            key={link.url}
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              width: '100%',
+              padding: '14px 16px',
+              background: 'white',
+              border: '1px solid #E2E8F0',
+              borderRadius: '10px',
+              textDecoration: 'none',
+              boxSizing: 'border-box',
+            }}
+          >
+            <span style={{ fontSize: '16px', marginRight: '10px', flexShrink: 0 }}>
+              {link.emoji}
+            </span>
+            <span style={{ flex: 1, fontSize: '14px', fontWeight: 500, color: '#0F172A' }}>
+              {link.label}
+            </span>
+            <span style={{ fontSize: '14px', color: '#94A3B8', flexShrink: 0 }}>→</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 // ─── RelatedSymbolsSection ────────────────────────────────────────────────────
 
 function RelatedSymbolsSection({
@@ -812,50 +893,68 @@ function RelatedSymbolsSection({
     [router]
   );
 
+  const handleCompareClick = useCallback(
+    (relatedSymbol: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      router.push(`/compare?a=${symbol}&b=${relatedSymbol}`);
+    },
+    [router, symbol]
+  );
+
   return (
     <section style={{ padding: '16px' }}>
       <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#0F172A', margin: '0 0 12px' }}>
         관련 종목
       </h3>
-      <div
-        style={{
-          display: 'flex',
-          gap: '8px',
-          overflowX: 'auto',
-          paddingBottom: '8px',
-          WebkitOverflowScrolling: 'touch',
-        }}
-      >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {relatedSymbols.map((item) => (
-          <button
+          <div
             key={item.symbol}
-            type="button"
-            onClick={() => handleSymbolClick(item.symbol, item.type)}
             style={{
-              padding: '8px 12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 12px',
               background: 'white',
               border: '1px solid #E2E8F0',
-              borderRadius: '6px',
-              fontSize: '13px',
-              fontWeight: 500,
-              color: '#0F172A',
-              cursor: 'pointer',
-              flexShrink: 0,
-              transition: 'background-color 0.2s, border-color 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              const target = e.currentTarget;
-              target.style.backgroundColor = '#F1F5F9';
-              target.style.borderColor = '#CBD5E1';
-            }}
-            onMouseLeave={(e) => {
-              const target = e.currentTarget;
-              target.style.backgroundColor = 'white';
-              target.style.borderColor = '#E2E8F0';
+              borderRadius: '8px',
             }}
           >
-            {item.name}
-          </button>
+            <button
+              type="button"
+              onClick={() => handleSymbolClick(item.symbol, item.type)}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                fontSize: '13px',
+                fontWeight: 500,
+                color: '#0F172A',
+                cursor: 'pointer',
+                textAlign: 'left',
+                flex: 1,
+              }}
+            >
+              {item.name}
+            </button>
+            <button
+              type="button"
+              onClick={(e) => handleCompareClick(item.symbol, e)}
+              style={{
+                padding: '4px 10px',
+                fontSize: '13px',
+                fontWeight: 500,
+                color: '#2563EB',
+                background: 'white',
+                border: '1px solid #2563EB',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              비교
+            </button>
+          </div>
         ))}
       </div>
     </section>

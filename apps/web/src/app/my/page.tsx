@@ -1116,7 +1116,7 @@ export default function MyPage(): React.ReactElement {
               overflow: 'hidden',
             }}
           >
-            {/* 가격 알림 */}
+            {/* 알림 설정 */}
             <div
               style={{
                 display: 'flex',
@@ -1126,10 +1126,10 @@ export default function MyPage(): React.ReactElement {
                 borderBottom: '1px solid #F1F5F9',
               }}
             >
-              <span style={{ fontSize: '14px', color: '#0F172A' }}>🔔 가격 알림</span>
+              <span style={{ fontSize: '14px', color: '#0F172A' }}>🔔 알림 설정</span>
               {notifPermission === 'granted' ? (
                 <span style={{ fontSize: '13px', color: '#16A34A', fontWeight: 500 }}>
-                  알림 켜짐
+                  켜짐
                 </span>
               ) : notifPermission === 'denied' ? (
                 <span style={{ fontSize: '13px', color: '#94A3B8' }}>
@@ -1137,9 +1137,10 @@ export default function MyPage(): React.ReactElement {
                 </span>
               ) : (
                 <button
+                  type="button"
                   onClick={() => void requestPermission()}
                   style={{
-                    padding: '6px 14px',
+                    padding: '4px 12px',
                     borderRadius: '8px',
                     border: 'none',
                     background: '#2563EB',
@@ -1149,12 +1150,12 @@ export default function MyPage(): React.ReactElement {
                     cursor: 'pointer',
                   }}
                 >
-                  알림 허용
+                  허용
                 </button>
               )}
             </div>
 
-            {/* 다크 모드 */}
+            {/* 언어 */}
             <div
               style={{
                 display: 'flex',
@@ -1164,11 +1165,25 @@ export default function MyPage(): React.ReactElement {
                 borderBottom: '1px solid #F1F5F9',
               }}
             >
-              <span style={{ fontSize: '14px', color: '#94A3B8' }}>🌙 다크 모드</span>
-              <span style={{ fontSize: '13px', color: '#94A3B8' }}>준비 중</span>
+              <span style={{ fontSize: '14px', color: '#0F172A' }}>🌐 언어</span>
+              <span style={{ fontSize: '13px', color: '#64748B' }}>한국어 &gt;</span>
             </div>
 
-            {/* 앱 정보 */}
+            {/* 가격 표시 */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '14px 16px',
+                borderBottom: '1px solid #F1F5F9',
+              }}
+            >
+              <span style={{ fontSize: '14px', color: '#0F172A' }}>📊 가격 표시</span>
+              <span style={{ fontSize: '13px', color: '#64748B' }}>원화(KRW) &gt;</span>
+            </div>
+
+            {/* 데이터 초기화 */}
             <div
               style={{
                 display: 'flex',
@@ -1177,17 +1192,35 @@ export default function MyPage(): React.ReactElement {
                 padding: '14px 16px',
               }}
             >
-              <span style={{ fontSize: '14px', color: '#0F172A' }}>📱 앱 정보</span>
-              <span style={{ fontSize: '13px', color: '#64748B', fontWeight: 500 }}>
-                v0.1.0
-              </span>
+              <span style={{ fontSize: '14px', color: '#0F172A' }}>🗑️ 데이터 초기화</span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm('관심종목, 알림, 보유종목 데이터를 모두 삭제합니다. 계속할까요?')) {
+                    localStorage.clear();
+                    window.location.reload();
+                  }
+                }}
+                style={{
+                  padding: '4px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid #E84040',
+                  background: 'white',
+                  color: '#E84040',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
+                초기화
+              </button>
             </div>
           </div>
         </section>
 
         {/* 앱 정보 섹션 */}
         <section aria-label="앱 정보">
-          <SectionHeader title="ℹ️ 정보" />
+          <SectionHeader title="ℹ️ 앱 정보" />
           <div
             style={{
               background: 'white',
@@ -1207,12 +1240,12 @@ export default function MyPage(): React.ReactElement {
               }}
             >
               <span style={{ fontSize: '14px', color: '#0F172A' }}>버전</span>
-              <span style={{ fontSize: '14px', color: '#64748B', fontWeight: 500 }}>
-                v0.1.0 (Beta)
+              <span style={{ fontSize: '13px', color: '#64748B', fontWeight: 500 }}>
+                0.1.0 (Beta)
               </span>
             </div>
 
-            {/* 저장 방식 안내 */}
+            {/* 설명 */}
             <div
               style={{
                 padding: '14px 16px',
@@ -1220,11 +1253,11 @@ export default function MyPage(): React.ReactElement {
               }}
             >
               <p style={{ fontSize: '13px', color: '#64748B', margin: 0, lineHeight: 1.6 }}>
-                관심종목은 이 기기에 저장됩니다. 로그인 불필요.
+                CoStock — 주식+코인 통합 투자정보
               </p>
             </div>
 
-            {/* 피드백 */}
+            {/* GitHub */}
             <div
               style={{
                 display: 'flex',
@@ -1233,8 +1266,15 @@ export default function MyPage(): React.ReactElement {
                 padding: '14px 16px',
               }}
             >
-              <span style={{ fontSize: '14px', color: '#0F172A' }}>피드백 보내기</span>
-              <span style={{ fontSize: '14px', color: '#94A3B8' }}>준비 중</span>
+              <span style={{ fontSize: '14px', color: '#0F172A' }}>GitHub</span>
+              <a
+                href="https://github.com/gguloadoong/costock"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: '13px', color: '#2563EB', textDecoration: 'none' }}
+              >
+                github.com/gguloadoong/costock
+              </a>
             </div>
           </div>
         </section>

@@ -29,11 +29,11 @@ interface IndexData {
   unit: string; // 'pt' | '%' | '원'
 }
 
-interface FxRate {
+interface ExchangeRate {
   pair: string;
-  rate: number;
-  change: number;
+  value: number;
   changeRate: number;
+  flag: string;
 }
 
 interface SectorData {
@@ -70,10 +70,12 @@ const MOCK_INDICES: IndexData[] = [
 
 const MOCK_BTC_DOMINANCE = 52.4;
 
-const MOCK_FX: FxRate[] = [
-  { pair: 'USD/KRW', rate: 1_325.50, change: 3.20, changeRate: 0.24 },
-  { pair: 'JPY/KRW', rate: 8.87, change: -0.02, changeRate: -0.23 },
-  { pair: 'EUR/KRW', rate: 1_438.20, change: -2.10, changeRate: -0.15 },
+const EXCHANGE_RATES: ExchangeRate[] = [
+  { pair: 'USD/KRW', value: 1_325.40, changeRate: 0.34, flag: '🇺🇸' },
+  { pair: 'EUR/KRW', value: 1_445.20, changeRate: -0.18, flag: '🇪🇺' },
+  { pair: 'JPY/KRW', value: 8.89, changeRate: 0.12, flag: '🇯🇵' },
+  { pair: 'CNY/KRW', value: 182.50, changeRate: -0.08, flag: '🇨🇳' },
+  { pair: 'BTC/KRW', value: 94_500_000, changeRate: 4.23, flag: '₿' },
 ];
 
 const MOCK_FEAR_GREED = 65;
@@ -288,40 +290,140 @@ function BtcDominanceCard({ value }: BtcDominanceCardProps): React.ReactElement 
   );
 }
 
-// ─── 환율 행 ──────────────────────────────────────────────────────────────────
+// ─── 환율 카드 (수평 스크롤) ──────────────────────────────────────────────────
 
-interface FxRowProps {
-  fx: FxRate;
-  isLast: boolean;
+interface ExchangeRateCardProps {
+  data: ExchangeRate;
 }
 
-function FxRow({ fx, isLast }: FxRowProps): React.ReactElement {
-  const isRise = fx.changeRate > 0;
-  const isFall = fx.changeRate < 0;
-  const changeColor = isRise ? 'var(--kr-rise)' : isFall ? 'var(--kr-fall)' : '#6B7280';
+function ExchangeRateCard({ data }: ExchangeRateCardProps): React.ReactElement {
+  const isRise = data.changeRate > 0;
+  const isFall = data.changeRate < 0;
+  const changeColor = isRise ? '#E84040' : isFall ? '#2563EB' : '#6B7280';
   const changeSign = isRise ? '+' : '';
+
+  // JPY/KRW는 100엔 기준 서브텍스트 표시
+  const isJpy = data.pair === 'JPY/KRW';
+
+  // 값 포매팅: BTC는 정수, JPY는 소수 2자리, 나머지는 소수 2자리
+  const formattedValue =
+    data.pair === 'BTC/KRW'
+      ? data.value.toLocaleString('ko-KR', { maximumFractionDigits: 0 })
+      : data.value.toLocaleString('ko-KR', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
 
   return (
     <div
       style={{
+        flexShrink: 0,
+        width: '110px',
+        background: 'white',
+        borderRadius: '12px',
+        padding: '12px',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
         display: 'flex',
-        alignItems: 'center',
-        padding: '14px 16px',
-        borderBottom: isLast ? 'none' : '1px solid #F1F5F9',
+        flexDirection: 'column',
+        gap: '2px',
       }}
     >
-      <span style={{ flex: 1, fontSize: '14px', fontWeight: 500, color: '#0F172A' }}>
-        {fx.pair}
-      </span>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-        <span style={{ fontSize: '15px', fontWeight: 600, color: '#0F172A' }}>
-          {fx.rate.toLocaleString('ko-KR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-        </span>
-        <span style={{ fontSize: '12px', fontWeight: 500, color: changeColor }}>
-          {changeSign}{fx.change.toFixed(2)} ({changeSign}{fx.changeRate.toFixed(2)}%)
+      <p
+        style={{
+          fontSize: '11px',
+          color: '#6B7280',
+          margin: '0 0 4px',
+          fontWeight: 500,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
+        {data.flag} {data.pair}
+      </p>
+      <p
+        style={{
+          fontSize: '14px',
+          fontWeight: 700,
+          color: '#0F172A',
+          margin: 0,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
+        {formattedValue}
+      </p>
+      <p
+        style={{
+          fontSize: '12px',
+          fontWeight: 600,
+          color: changeColor,
+          margin: 0,
+        }}
+      >
+        {changeSign}{data.changeRate.toFixed(2)}%
+      </p>
+      {isJpy && (
+        <p
+          style={{
+            fontSize: '9px',
+            color: '#94A3B8',
+            margin: 0,
+          }}
+        >
+          100엔 기준
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ─── 환율 섹션 (수평 스크롤 카드) ─────────────────────────────────────────────
+
+interface ExchangeRatesSectionProps {
+  updatedLabel: string;
+}
+
+function ExchangeRatesSection({ updatedLabel }: ExchangeRatesSectionProps): React.ReactElement {
+  return (
+    <section aria-label="환율">
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '20px 16px 8px',
+        }}
+      >
+        <h2
+          style={{
+            fontSize: '16px',
+            fontWeight: 600,
+            color: '#0F172A',
+            margin: 0,
+          }}
+        >
+          💱 환율
+        </h2>
+        <span style={{ fontSize: '11px', color: '#94A3B8' }}>
+          업데이트: {updatedLabel}
         </span>
       </div>
-    </div>
+      <div
+        style={{
+          display: 'flex',
+          overflowX: 'auto',
+          gap: '12px',
+          padding: '0 16px 8px',
+          scrollbarWidth: 'none',
+        }}
+      >
+        {EXCHANGE_RATES.map((rate) => (
+          <ExchangeRateCard key={rate.pair} data={rate} />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -729,6 +831,11 @@ export default function MarketPage(): React.ReactElement {
 
   const displayIndices = isLoading ? MOCK_INDICES : indices;
 
+  // 오늘의 시황 배너 데이터 (KOSPI, BTC, USD/KRW 고정 표시)
+  const kospiItem = displayIndices.find((i) => i.id === 'kospi') ?? MOCK_INDICES[0];
+  const kospiSign = kospiItem.changeRate > 0 ? '+' : '';
+  const summaryBannerText = `📊 오늘의 시황: 코스피 ${kospiSign}${kospiItem.changeRate.toFixed(2)}% · BTC +4.23% · USD/KRW 1,325.40`;
+
   return (
     <>
       <div
@@ -740,6 +847,20 @@ export default function MarketPage(): React.ReactElement {
           paddingBottom: '80px',
         }}
       >
+        {/* 오늘의 시황 배너 */}
+        <div
+          style={{
+            background: '#EFF6FF',
+            color: '#1D4ED8',
+            fontSize: '14px',
+            padding: '10px 16px',
+            fontWeight: 500,
+            lineHeight: 1.4,
+          }}
+        >
+          {summaryBannerText}
+        </div>
+
         {/* 상단 헤더 */}
         <header
           style={{
@@ -805,21 +926,7 @@ export default function MarketPage(): React.ReactElement {
         <GlobalIndicesSection />
 
         {/* 환율 */}
-        <section aria-label="환율">
-          <SectionHeader title="💱 환율" />
-          <div
-            style={{
-              background: 'white',
-              borderRadius: '16px',
-              margin: '0 16px 8px',
-              overflow: 'hidden',
-            }}
-          >
-            {MOCK_FX.map((fx, idx) => (
-              <FxRow key={fx.pair} fx={fx} isLast={idx === MOCK_FX.length - 1} />
-            ))}
-          </div>
-        </section>
+        <ExchangeRatesSection updatedLabel={timeAgoLabel} />
 
         {/* 공포탐욕지수 */}
         <section aria-label="공포탐욕지수">
