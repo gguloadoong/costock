@@ -569,6 +569,43 @@ export function SearchBar({
             </svg>
           </div>
         )}
+
+        {/* 입력 초기화 버튼 */}
+        {query && !isLoading && (
+          <button
+            style={{
+              position: 'absolute',
+              right: '10px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              padding: '4px',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#94A3B8',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onClick={() => {
+              setQuery('');
+              setResults([]);
+              setActiveIndex(-1);
+              inputRef.current?.focus();
+            }}
+            aria-label="검색어 지우기"
+            tabIndex={-1}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path
+                d="M1 1L13 13M13 1L1 13"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* 드롭다운 */}
