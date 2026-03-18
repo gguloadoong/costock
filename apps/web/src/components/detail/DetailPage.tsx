@@ -36,6 +36,21 @@ interface NewsItem {
   url: string;
 }
 
+// ─── 뉴스 카테고리 배지 헬퍼 ─────────────────────────────────────────────────
+
+const CATEGORY_KEYWORDS: { label: string; keywords: string[] }[] = [
+  { label: '시황', keywords: ['시황', '증시', '코스피', '코스닥', '지수', '시장', '장세', '매수', '매도', '급등', '급락'] },
+  { label: '기업', keywords: ['실적', '분기', '영업이익', '매출', '순이익', '어닝', '배당', '공시', '대표', 'CEO', '인수', '합병'] },
+  { label: '산업', keywords: ['반도체', '배터리', '전기차', '바이오', 'AI', '인공지능', '금리', '환율', '원자재', '섹터', '업종'] },
+];
+
+function getNewsCategory(title: string): string | null {
+  for (const { label, keywords } of CATEGORY_KEYWORDS) {
+    if (keywords.some((kw) => title.includes(kw))) return label;
+  }
+  return null;
+}
+
 // ─── Mock 데이터 헬퍼 ─────────────────────────────────────────────────────────
 
 const MOCK_NAMES: Record<string, string> = {
@@ -459,39 +474,78 @@ export function DetailPage({ symbol, assetType }: DetailPageProps): React.ReactE
         </h3>
         {news.length > 0 && !newsError ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {news.map((item, idx) => (
-              <a
-                key={idx}
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'block',
-                  padding: '12px',
-                  background: 'white',
-                  borderRadius: '8px',
-                  border: '1px solid #E2E8F0',
-                  textDecoration: 'none',
-                }}
-              >
-                <p
+            {news.map((item, idx) => {
+              const category = getNewsCategory(item.title);
+              return (
+                <a
+                  key={idx}
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   style={{
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    color: '#0F172A',
-                    margin: '0 0 4px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '12px',
+                    padding: '12px',
+                    background: 'white',
+                    borderRadius: '8px',
+                    border: '1px solid #E2E8F0',
+                    textDecoration: 'none',
                   }}
                 >
-                  {item.title.length > 15 ? `${item.title.slice(0, 15)}...` : item.title}
-                </p>
-                <p style={{ fontSize: '12px', color: '#94A3B8', margin: 0 }}>
-                  {item.source} &middot; {item.time}
-                </p>
-              </a>
-            ))}
+                  {/* 이미지 플레이스홀더 */}
+                  <div
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      flexShrink: 0,
+                      borderRadius: '6px',
+                      background: '#E2E8F0',
+                    }}
+                  />
+
+                  {/* 텍스트 영역 */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {/* 카테고리 배지 + 외부 링크 아이콘 */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      {category ? (
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            color: '#2563EB',
+                            background: '#EFF6FF',
+                            padding: '1px 6px',
+                            borderRadius: '4px',
+                          }}
+                        >
+                          {category}
+                        </span>
+                      ) : (
+                        <span />
+                      )}
+                      <span style={{ fontSize: '13px', color: '#94A3B8', flexShrink: 0 }}>↗</span>
+                    </div>
+                    <p
+                      style={{
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        color: '#0F172A',
+                        margin: '0 0 4px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {item.title}
+                    </p>
+                    <p style={{ fontSize: '12px', color: '#94A3B8', margin: 0 }}>
+                      {item.source} &middot; {item.time}
+                    </p>
+                  </div>
+                </a>
+              );
+            })}
           </div>
         ) : (
           <a

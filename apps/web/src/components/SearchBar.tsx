@@ -431,6 +431,16 @@ export function SearchBar({
     setRecentSearches(loadRecentSearches());
   }, []);
 
+  const handleClearAllRecent = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.removeItem(RECENT_SEARCHES_KEY);
+    } catch {
+      // 무시
+    }
+    setRecentSearches([]);
+  }, []);
+
   const handlePopularSelect = useCallback(
     (item: PopularSymbol) => handleSelect(item.symbol, item.name, item.type),
     [handleSelect]
@@ -518,7 +528,7 @@ export function SearchBar({
             width: '100%',
             height: '44px',
             paddingLeft: '36px',
-            paddingRight: '16px',
+            paddingRight: query ? '36px' : '16px',
             borderRadius: '12px',
             background: '#F1F5F9',
             border: '1px solid transparent',
@@ -604,8 +614,30 @@ export function SearchBar({
               {/* 최근 검색어 섹션 */}
               {recentSearches.length > 0 && (
                 <>
-                  <div style={{ padding: '8px 16px', borderBottom: '1px solid #F1F5F9' }}>
+                  <div
+                    style={{
+                      padding: '8px 16px',
+                      borderBottom: '1px solid #F1F5F9',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
                     <span style={{ fontSize: '12px', fontWeight: 500, color: '#94A3B8' }}>최근 검색</span>
+                    <button
+                      style={{
+                        padding: 0,
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        color: '#94A3B8',
+                      }}
+                      onClick={handleClearAllRecent}
+                      aria-label="최근 검색 전체 삭제"
+                    >
+                      전체 삭제
+                    </button>
                   </div>
                   {recentSearches.map((item, i) => (
                     <RecentItem

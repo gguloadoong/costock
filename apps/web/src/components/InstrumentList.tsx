@@ -3,6 +3,7 @@
 import React from 'react';
 import { PriceCard, PriceCardSkeleton } from '@/design-system';
 import type { HomeTab, InstrumentWithPrice } from '@/types/market';
+import { SwipeableItem } from '@/components/SwipeableItem';
 
 export interface InstrumentListProps {
   instruments: InstrumentWithPrice[];
@@ -12,6 +13,7 @@ export interface InstrumentListProps {
   onSelect: (symbol: string) => void;
   watchlistIds?: Set<string>;
   onWatchlistToggle?: (item: InstrumentWithPrice) => void;
+  showSwipeDelete?: boolean;
 }
 
 const SKELETON_COUNT = 5;
@@ -24,6 +26,7 @@ export function InstrumentList({
   onSelect,
   watchlistIds,
   onWatchlistToggle,
+  showSwipeDelete,
 }: InstrumentListProps): React.ReactElement {
   if (isLoading) {
     return (
@@ -87,7 +90,7 @@ export function InstrumentList({
         // 코인은 가격 크기에 따라 소수점 조정
         const decimals = item.type === 'coin' && price < 100 ? 2 : 0;
 
-        return (
+        const card = (
           <PriceCard
             key={item.symbol}
             symbol={item.symbol}
@@ -104,6 +107,19 @@ export function InstrumentList({
             onWatchlistToggle={onWatchlistToggle ? () => onWatchlistToggle(item) : undefined}
           />
         );
+
+        if (showSwipeDelete && onWatchlistToggle) {
+          return (
+            <SwipeableItem
+              key={item.symbol}
+              onDelete={() => onWatchlistToggle(item)}
+            >
+              {card}
+            </SwipeableItem>
+          );
+        }
+
+        return card;
       })}
     </div>
   );
