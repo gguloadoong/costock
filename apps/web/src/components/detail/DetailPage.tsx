@@ -637,6 +637,65 @@ export function DetailPage({ symbol, assetType }: DetailPageProps): React.ReactE
 
       {/* ── 관련 종목 섹션 ── */}
       <RelatedSymbolsSection symbol={symbol} assetType={assetType} />
+
+      {/* ── 하단 고정 CTA ── */}
+      <div
+        style={{
+          position: 'sticky',
+          bottom: 0,
+          background: 'white',
+          borderTop: '1px solid #F1F5F9',
+          padding: '12px 16px',
+          display: 'flex',
+          gap: '12px',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => void handleWatchlistToggle()}
+          style={{
+            flexShrink: 0,
+            padding: '12px 16px',
+            borderRadius: '12px',
+            border: '1px solid #E2E8F0',
+            background: isWatchlisted ? '#F8FAFC' : 'white',
+            color: '#4B5563',
+            fontSize: '14px',
+            fontWeight: 500,
+            cursor: 'pointer',
+          }}
+        >
+          {isWatchlisted ? '⭐ 관심' : '☆ 관심'}
+        </button>
+        <button
+          type="button"
+          onClick={() => setIsHoldingOpen(true)}
+          style={{
+            flex: 1,
+            padding: '12px',
+            borderRadius: '12px',
+            border: 'none',
+            background: '#111827',
+            color: 'white',
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+        >
+          매수 기록하기
+        </button>
+      </div>
+
+      {/* ── 매수 기록 모달 ── */}
+      {isHoldingOpen && (
+        <HoldingModal
+          symbol={symbol}
+          name={instrumentName}
+          type={assetType}
+          currentPrice={currentPrice}
+          onClose={() => setIsHoldingOpen(false)}
+        />
+      )}
     </div>
   );
 }
