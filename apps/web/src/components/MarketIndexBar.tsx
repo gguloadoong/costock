@@ -14,6 +14,7 @@ import { ChangeBadge, LiveIndicator } from '@/design-system';
 import { formatPriceSafe } from '@/design-system';
 import type { LiveStatus } from '@/design-system';
 import type { MarketIndex } from '@/types/market';
+import { getStockMarketInfo } from '@/lib/marketHours';
 
 // ─── 스켈레톤 ─────────────────────────────────────────────────────────────────
 
@@ -128,6 +129,8 @@ export function MarketIndexBar({
   isLoading = false,
   liveStatus,
 }: MarketIndexBarProps): React.ReactElement {
+  const stockMarketInfo = getStockMarketInfo();
+
   return (
     <div style={{ background: 'white', borderBottom: '1px solid #E2E8F0' }}>
       {/* 상태 행 */}
@@ -140,7 +143,31 @@ export function MarketIndexBar({
         }}
       >
         <span style={{ fontSize: '12px', fontWeight: 500, color: '#64748B' }}>시장 지수</span>
-        <LiveIndicator status={liveStatus} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span
+            style={{
+              fontSize: '11px',
+              fontWeight: 500,
+              padding: '2px 6px',
+              borderRadius: '4px',
+              background:
+                stockMarketInfo.status === 'open'
+                  ? '#DCFCE7'
+                  : stockMarketInfo.status === 'pre' || stockMarketInfo.status === 'after'
+                  ? '#FEF9C3'
+                  : '#F3F4F6',
+              color:
+                stockMarketInfo.status === 'open'
+                  ? '#16A34A'
+                  : stockMarketInfo.status === 'pre' || stockMarketInfo.status === 'after'
+                  ? '#CA8A04'
+                  : '#6B7280',
+            }}
+          >
+            {stockMarketInfo.label}
+          </span>
+          <LiveIndicator status={liveStatus} />
+        </div>
       </div>
 
       {/* 가로 스크롤 지수 목록 */}
