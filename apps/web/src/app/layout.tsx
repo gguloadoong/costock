@@ -11,8 +11,12 @@ import { Providers } from './providers';
 import { ServiceWorkerRegistrar } from '@/components/ServiceWorkerRegistrar';
 
 export const metadata: Metadata = {
-  title: 'CoStock — 주식·코인 통합 투자정보',
-  description: '주식과 코인을 하나의 앱에서. 실시간 가격, 통합 포트폴리오.',
+  title: {
+    default: 'CoStock — 주식·코인 통합 투자정보',
+    template: '%s | CoStock',
+  },
+  description: '주식과 코인을 하나의 앱에서. 실시간 가격, 통합 포트폴리오, 크로스에셋 인사이트.',
+  keywords: ['주식', '코인', '비트코인', '삼성전자', '투자', '실시간 시세'],
   applicationName: 'CoStock',
   appleWebApp: {
     capable: true,
@@ -25,6 +29,28 @@ export const metadata: Metadata = {
   icons: {
     icon: '/icon.svg',
     apple: '/icon.svg',
+  },
+  openGraph: {
+    title: 'CoStock — 주식·코인 통합 투자정보',
+    description: '주식과 코인을 하나의 앱에서 확인하세요. 실시간 가격, 통합 포트폴리오, 크로스에셋 인사이트.',
+    type: 'website',
+    locale: 'ko_KR',
+    url: 'https://costock.app',
+    siteName: 'CoStock',
+    images: [
+      {
+        url: 'https://costock.app/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'CoStock',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CoStock',
+    description: '주식과 코인을 하나의 앱에서 확인하세요.',
+    images: ['https://costock.app/twitter-image.png'],
   },
 };
 
