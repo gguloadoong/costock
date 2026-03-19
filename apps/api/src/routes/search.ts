@@ -115,9 +115,25 @@ const CRYPTO_LIST: Instrument[] = [
   { symbol: 'KRW-NEAR', name: '니어프로토콜', assetType: 'crypto', exchange: 'UPBIT' },
 ]
 
+// ─── 미국주식 목록 ───────────────────────────────────────────────────────
+
+const US_STOCKS: Instrument[] = [
+  { symbol: 'NVDA',  name: 'NVIDIA',         assetType: 'stock', exchange: 'NASDAQ' },
+  { symbol: 'AAPL',  name: 'Apple',           assetType: 'stock', exchange: 'NASDAQ' },
+  { symbol: 'MSFT',  name: 'Microsoft',       assetType: 'stock', exchange: 'NASDAQ' },
+  { symbol: 'TSLA',  name: 'Tesla',           assetType: 'stock', exchange: 'NASDAQ' },
+  { symbol: 'META',  name: 'Meta',            assetType: 'stock', exchange: 'NASDAQ' },
+  { symbol: 'AMZN',  name: 'Amazon',          assetType: 'stock', exchange: 'NASDAQ' },
+  { symbol: 'GOOGL', name: 'Alphabet',        assetType: 'stock', exchange: 'NASDAQ' },
+  { symbol: 'SPY',   name: 'S&P500 ETF',      assetType: 'stock', exchange: 'NYSE' },
+  { symbol: 'QQQ',   name: 'Nasdaq100 ETF',   assetType: 'stock', exchange: 'NASDAQ' },
+  { symbol: 'TQQQ',  name: 'Nasdaq100 3x',    assetType: 'stock', exchange: 'NASDAQ' },
+  { symbol: 'SOXL',  name: '반도체 3x ETF',   assetType: 'stock', exchange: 'NYSE' },
+]
+
 // ─── 전체 목록 (주식 + 코인) ─────────────────────────────────────────────
 
-const ALL_INSTRUMENTS: Instrument[] = [...KRX_STOCKS, ...CRYPTO_LIST]
+const ALL_INSTRUMENTS: Instrument[] = [...KRX_STOCKS, ...CRYPTO_LIST, ...US_STOCKS]
 
 // ─── 검색 로직 ───────────────────────────────────────────────────────────
 
@@ -177,10 +193,9 @@ export async function searchRoutes(app: FastifyInstance) {
     logger.debug({ q, count: results.length }, '통합 검색 실행')
 
     const data: SearchResult[] = results.map((item) => {
-      // priceService는 KR주식을 '005930.KS' 형태로 저장, 코인은 'KRW-BTC' 그대로
-      const priceSymbol = item.assetType === 'stock' && !item.symbol.includes('-')
-        ? `${item.symbol}.KS`
-        : item.symbol
+      // priceService는 KR주식을 '005930.KS' 형태로 저장, US주식·코인은 그대로
+      const isKrStock = item.assetType === 'stock' && item.exchange !== 'NASDAQ' && item.exchange !== 'NYSE'
+      const priceSymbol = isKrStock ? `${item.symbol}.KS` : item.symbol
       const live = getPrice(priceSymbol) ?? getPrice(item.symbol)
 
       const result: SearchResult = {
