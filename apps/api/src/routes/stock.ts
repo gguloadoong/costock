@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { getHantooToken, HANTOO_BASE, resetHantooToken } from '../lib/hantooToken'
+import { getHantooToken, HANTOO_BASE } from '../lib/hantooToken'
 import { logger } from '../lib/logger'
 
 // ─── 쿼리 스키마 ─────────────────────────────────────────────────────────
@@ -354,8 +354,6 @@ export async function stockRoutes(app: FastifyInstance) {
     } catch (err) {
       const message = (err as Error).message
       logger.error({ err: { message }, symbol, period }, '한투 차트 조회 실패')
-      // 토큰 만료 가능성 → 캐시 초기화
-      resetHantooToken()
       return reply.status(502).send({
         statusCode: 502,
         error: 'Bad Gateway',
@@ -397,7 +395,6 @@ export async function stockRoutes(app: FastifyInstance) {
     } catch (err) {
       const message = (err as Error).message
       logger.error({ err: { message }, symbol }, '한투 투자자 조회 실패')
-      resetHantooToken()
       return reply.status(502).send({
         statusCode: 502,
         error: 'Bad Gateway',
