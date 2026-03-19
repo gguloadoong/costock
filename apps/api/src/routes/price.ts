@@ -348,7 +348,7 @@ export async function priceRoutes(app: FastifyInstance) {
   app.get('/:symbol', async (req, reply) => {
     const { symbol } = req.params as { symbol: string }
 
-    if (!/^[A-Z0-9_]{1,20}$/.test(symbol)) {
+    if (!/^[A-Z0-9_\-]{1,20}$/.test(symbol)) {
       return reply.status(400).send({
         statusCode: 400,
         error: 'Bad Request',

@@ -375,6 +375,24 @@ const TRADE_REASONS: Record<TraderStrategy, { buy: string[]; sell: string[] }> =
   },
 }
 
+/**
+ * 실제 손익 방향에 맞는 매도 이유 선택
+ * - realizedPnl > 0 : 수익 실현 계열 이유 선호 (손절 키워드 제외)
+ * - realizedPnl <= 0 : 손실 관리 계열 이유 선호 (수익% 표기 제외)
+ */
+function pickSellReason(strategy: TraderStrategy, realizedPnl: number, rng: () => number): string {
+  const reasons = TRADE_REASONS[strategy].sell
+  if (realizedPnl > 0) {
+    const profitReasons = reasons.filter((r) => !r.includes('손절') && !r.includes('손실'))
+    const pool = profitReasons.length > 0 ? profitReasons : reasons
+    return pool[Math.floor(rng() * pool.length)]!
+  } else {
+    const lossReasons = reasons.filter((r) => !r.includes('+12%') && !r.includes('+28%') && !r.includes('수익 실현'))
+    const pool = lossReasons.length > 0 ? lossReasons : reasons
+    return pool[Math.floor(rng() * pool.length)]!
+  }
+}
+
 // ─── In-Memory 상태 ───────────────────────────────────────────────────────
 
 interface TraderState {
@@ -689,7 +707,7 @@ function buildBackfill(state: TraderState): void {
         quantity:    sellQty,
         amount:      Math.round(sellAmount),
         realizedPnl: Math.round(realizedPnl),
-        reason:      TRADE_REASONS[profile.strategy].sell[Math.floor(rng() * TRADE_REASONS[profile.strategy].sell.length)]!,
+        reason:      pickSellReason(profile.strategy, realizedPnl, rng),
         timestamp:   sellTimestamp,
         isSimulated: true,
       }
@@ -833,8 +851,7 @@ function executeSell(state: TraderState, symbol: string, overrideReason?: string
     pos.quantity -= quantity
   }
 
-  const reasons = TRADE_REASONS[state.profile.strategy].sell
-  const reason  = overrideReason ?? reasons[Math.floor(Math.random() * reasons.length)]!
+  const reason  = overrideReason ?? pickSellReason(state.profile.strategy, realizedPnl, Math.random)
 
   return {
     id:          generateTradeId(),
