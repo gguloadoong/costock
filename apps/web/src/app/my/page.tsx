@@ -525,6 +525,26 @@ export default function MyPage(): React.ReactElement {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [liveData]);
   const { permission: notifPermission, requestPermission } = useNotification();
+  const [marketNotifStatus, setMarketNotifStatus] = useState<'idle' | 'granted' | 'denied'>(() => {
+    if (typeof window === 'undefined') return 'idle';
+    return localStorage.getItem('push_enabled') === 'true' ? 'granted' : 'idle';
+  });
+
+  const handleRequestMarketNotif = useCallback(async () => {
+    if (!('Notification' in window)) {
+      showToast({ text: '이 브라우저는 알림을 지원하지 않습니다', type: 'error' });
+      return;
+    }
+    const result = await Notification.requestPermission();
+    if (result === 'granted') {
+      localStorage.setItem('push_enabled', 'true');
+      setMarketNotifStatus('granted');
+      showToast({ text: '개장(09:00), 마감(15:30) 알림이 설정되었습니다', type: 'success' });
+    } else {
+      setMarketNotifStatus('denied');
+      showToast({ text: '브라우저 설정에서 알림을 허용해주세요', type: 'warning' });
+    }
+  }, []);
 
   // 수익률 요약 계산
   const profitSummary = useMemo(() => {
@@ -572,6 +592,27 @@ export default function MyPage(): React.ReactElement {
     }
   }, [items]);
 
+  const handleExport = useCallback(() => {
+    const payload = {
+      exported_at: new Date().toISOString(),
+      version: '1.0',
+      watchlist: items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        type: item.type,
+        addedAt: item.addedAt,
+      })),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'watchlist.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast({ text: 'watchlist.json 다운로드됨', type: 'success' });
+  }, [items]);
+
   return (
     <>
       <div
@@ -580,7 +621,6 @@ export default function MyPage(): React.ReactElement {
           margin: '0 auto',
           background: '#F8FAFC',
           minHeight: '100vh',
-          paddingBottom: '80px',
         }}
       >
         {/* 상단 헤더 */}
@@ -1082,26 +1122,45 @@ export default function MyPage(): React.ReactElement {
             }}
           >
             <p style={{ fontSize: '13px', color: '#64748B', margin: '0 0 12px' }}>
-              현재 관심종목 목록을 URL로 공유할 수 있어요.
+              현재 관심종목 목록을 URL로 공유하거나 JSON으로 내보낼 수 있어요.
             </p>
-            <button
-              onClick={() => void handleCopyUrl()}
-              disabled={items.length === 0}
-              style={{
-                width: '100%',
-                padding: '12px',
-                borderRadius: '12px',
-                border: 'none',
-                background: copied ? '#22C55E' : items.length === 0 ? '#F1F5F9' : '#0F172A',
-                color: items.length === 0 ? '#94A3B8' : 'white',
-                fontSize: '14px',
-                fontWeight: 500,
-                cursor: items.length === 0 ? 'not-allowed' : 'pointer',
-                transition: 'background 0.2s ease',
-              }}
-            >
-              {copied ? '복사됨 ✓' : 'URL 복사'}
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => void handleCopyUrl()}
+                disabled={items.length === 0}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: copied ? '#22C55E' : items.length === 0 ? '#F1F5F9' : '#0F172A',
+                  color: items.length === 0 ? '#94A3B8' : 'white',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: items.length === 0 ? 'not-allowed' : 'pointer',
+                  transition: 'background 0.2s ease',
+                }}
+              >
+                {copied ? '복사됨 ✓' : 'URL 복사'}
+              </button>
+              <button
+                onClick={handleExport}
+                disabled={items.length === 0}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  borderRadius: '12px',
+                  border: '1px solid #E2E8F0',
+                  background: items.length === 0 ? '#F1F5F9' : 'white',
+                  color: items.length === 0 ? '#94A3B8' : '#0F172A',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: items.length === 0 ? 'not-allowed' : 'pointer',
+                }}
+              >
+                JSON 내보내기
+              </button>
+            </div>
           </div>
         </section>
 
@@ -1151,6 +1210,49 @@ export default function MyPage(): React.ReactElement {
                   }}
                 >
                   허용
+                </button>
+              )}
+            </div>
+
+            {/* 시장 알림 */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '14px 16px',
+                borderBottom: '1px solid #F1F5F9',
+              }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <span style={{ fontSize: '14px', color: '#0F172A' }}>📈 시장 알림</span>
+                <span style={{ fontSize: '11px', color: '#94A3B8' }}>개장 09:00 · 마감 15:30</span>
+              </div>
+              {marketNotifStatus === 'granted' ? (
+                <span style={{ fontSize: '13px', color: '#16A34A', fontWeight: 500 }}>
+                  ✓ 개장(09:00), 마감(15:30) 알림 설정됨
+                </span>
+              ) : marketNotifStatus === 'denied' ? (
+                <span style={{ fontSize: '12px', color: '#94A3B8', maxWidth: '160px', textAlign: 'right', lineHeight: 1.4 }}>
+                  브라우저 설정에서 알림을 허용해주세요
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void handleRequestMarketNotif()}
+                  style={{
+                    padding: '4px 12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: '#0F172A',
+                    color: 'white',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  시장 알림 받기
                 </button>
               )}
             </div>

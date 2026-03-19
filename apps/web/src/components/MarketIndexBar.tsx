@@ -47,7 +47,15 @@ function MarketIndexItem({ index }: MarketIndexItemProps): React.ReactElement {
   const { name, value, changeRate, status, type } = index;
 
   const decimals = type === 'coin' ? 0 : 2;
-  const displayValue = formatPriceSafe(value, { decimals });
+  // 코인 가격은 억/만 단위로 축약 (ex: 142,850,000 → 1.43억)
+  let displayValue: string;
+  if (type === 'coin' && value >= 100_000_000) {
+    displayValue = `${(value / 100_000_000).toFixed(2)}억`;
+  } else if (type === 'coin' && value >= 10_000) {
+    displayValue = `${Math.round(value / 10_000).toLocaleString('ko-KR')}만`;
+  } else {
+    displayValue = formatPriceSafe(value, { decimals }) ?? '---';
+  }
 
   return (
     <div
@@ -105,7 +113,7 @@ function MarketIndexItem({ index }: MarketIndexItemProps): React.ReactElement {
           color: '#0F172A',
         }}
       >
-        {displayValue ?? '---'}
+        {displayValue}
       </span>
 
       {/* 변동률 */}

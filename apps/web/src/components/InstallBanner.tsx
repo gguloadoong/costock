@@ -41,7 +41,7 @@ export function InstallBanner() {
   if (!deferredPrompt || dismissed) return null;
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-40 bg-white border border-gray-200 rounded-2xl p-4 shadow-lg">
+    <div className="fixed bottom-24 left-4 right-4 z-40 bg-white border border-gray-200 rounded-2xl p-4 shadow-lg">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
           CS

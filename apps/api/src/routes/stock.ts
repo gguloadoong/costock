@@ -236,6 +236,44 @@ function isHantooConfigured(): boolean {
   return Boolean(process.env.HANTOO_APP_KEY && process.env.HANTOO_APP_SECRET)
 }
 
+// ─── 크로스에셋 연관 종목 매핑 ───────────────────────────────────────────
+
+interface RelatedAsset {
+  symbol: string
+  name: string
+  reason: string
+  assetType: 'stock' | 'coin'
+}
+
+const CRYPTO_TO_STOCKS: Record<string, { symbol: string; name: string; reason: string }[]> = {
+  'KRW-BTC': [
+    { symbol: '323280', name: '두나무', reason: '업비트 운영사' },
+    { symbol: '226340', name: '비덴트', reason: '빗썸 지분 보유' },
+    { symbol: '175140', name: '인터파크홀딩스', reason: '가상자산 사업' },
+  ],
+  'KRW-ETH': [
+    { symbol: '323280', name: '두나무', reason: '이더리움 거래량 1위' },
+    { symbol: '950170', name: '크래프톤', reason: '블록체인 게임' },
+  ],
+  'KRW-XRP': [
+    { symbol: '226340', name: '비덴트', reason: '리플 연계 사업' },
+  ],
+}
+
+const STOCK_TO_CRYPTO: Record<string, { symbol: string; name: string; reason: string }[]> = {
+  '323280': [
+    { symbol: 'KRW-BTC', name: '비트코인', reason: '업비트 주요 거래 코인' },
+    { symbol: 'KRW-ETH', name: '이더리움', reason: '업비트 2위 거래량' },
+  ],
+  '005930': [
+    { symbol: 'KRW-BTC', name: '비트코인', reason: '반도체-가상화폐 동조화' },
+  ],
+}
+
+const RelatedQuerySchema = z.object({
+  symbol: z.string().min(1).max(20),
+})
+
 // ─── 라우트 등록 ─────────────────────────────────────────────────────────
 
 /**
@@ -366,6 +404,41 @@ export async function stockRoutes(app: FastifyInstance) {
         message: `투자자 동향 조회 실패: ${message}`,
       })
     }
+  })
+
+  /**
+   * 크로스에셋 연관 종목 조회
+   * GET /api/v1/stocks/related?symbol=KRW-BTC  — 코인 → 관련 주식
+   * GET /api/v1/stocks/related?symbol=005930   — 주식 → 관련 코인
+   */
+  app.get('/related', async (req, reply) => {
+    const parsed = RelatedQuerySchema.safeParse(req.query)
+    if (!parsed.success) {
+      return reply.status(400).send({
+        statusCode: 400,
+        error: 'Bad Request',
+        message: 'symbol 파라미터가 필수입니다 (예: ?symbol=KRW-BTC)',
+      })
+    }
+
+    const { symbol } = parsed.data
+    let related: RelatedAsset[] = []
+
+    if (symbol.startsWith('KRW-')) {
+      // 코인 → 관련 주식
+      related = (CRYPTO_TO_STOCKS[symbol] ?? []).map((item) => ({
+        ...item,
+        assetType: 'stock' as const,
+      }))
+    } else {
+      // 주식 → 관련 코인
+      related = (STOCK_TO_CRYPTO[symbol] ?? []).map((item) => ({
+        ...item,
+        assetType: 'coin' as const,
+      }))
+    }
+
+    return reply.send({ data: { related } })
   })
 }
 

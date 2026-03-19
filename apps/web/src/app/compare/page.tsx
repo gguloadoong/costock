@@ -280,7 +280,7 @@ function CompareContent(): React.ReactElement {
   ];
 
   return (
-    <div style={{ background: 'white', maxWidth: '430px', margin: '0 auto', paddingBottom: '80px' }}>
+    <div style={{ background: 'white', maxWidth: '430px', margin: '0 auto' }}>
       {/* ── 헤더 ── */}
       <header
         style={{

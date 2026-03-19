@@ -844,7 +844,6 @@ export default function MarketPage(): React.ReactElement {
           margin: '0 auto',
           background: '#F8FAFC',
           minHeight: '100vh',
-          paddingBottom: '80px',
         }}
       >
         {/* 오늘의 시황 배너 */}

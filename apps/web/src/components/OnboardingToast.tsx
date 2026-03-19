@@ -8,15 +8,21 @@ const STEPS = [
   { emoji: '🔔', text: '가격 알림을 설정해서 놓치지 마세요' },
 ];
 
-export function OnboardingToast() {
+interface OnboardingToastProps {
+  hasWatchlistItems?: boolean;
+}
+
+export function OnboardingToast({ hasWatchlistItems = false }: OnboardingToastProps) {
   const [step, setStep] = useState(0);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (!localStorage.getItem('costock_onboarded')) {
+    if (!localStorage.getItem('costock_onboarded') && !hasWatchlistItems) {
       setVisible(true);
+    } else if (hasWatchlistItems) {
+      setVisible(false);
     }
-  }, []);
+  }, [hasWatchlistItems]);
 
   if (!visible) return null;
 
@@ -37,7 +43,7 @@ export function OnboardingToast() {
   };
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-40 bg-gray-900 text-white rounded-2xl p-4 shadow-xl">
+    <div className="fixed bottom-24 left-4 right-4 z-40 bg-gray-900 text-white rounded-2xl p-4 shadow-xl">
       <div className="flex items-start gap-3">
         <span className="text-2xl">{current.emoji}</span>
         <div className="flex-1">

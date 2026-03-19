@@ -389,7 +389,8 @@ export function DetailPage({ symbol, assetType }: DetailPageProps): React.ReactE
       : (COIN_NEWS_FALLBACK_URLS[symbol] ?? 'https://upbit.com');
 
   return (
-    <div style={{ background: 'white', maxWidth: '430px', margin: '0 auto', paddingBottom: '80px' }}>
+    /* paddingBottom: layout main의 BottomNav+면책고지 여백 외에 고정 CTA(68px) 추가 확보 */
+    <div style={{ background: 'white', maxWidth: '430px', margin: '0 auto', paddingBottom: '68px' }}>
       {/* ── 헤더 (sticky) ── */}
       <header
         style={{
@@ -534,6 +535,9 @@ export function DetailPage({ symbol, assetType }: DetailPageProps): React.ReactE
       <section style={{ background: '#F8FAFC', padding: '16px' }}>
         <PriceChart symbol={symbol} assetType={assetType} />
       </section>
+
+      {/* ── 호가창 ── */}
+      <OrderBookSection symbol={symbol} basePrice={currentPrice} />
 
       {/* ── 핵심 지표 그리드 (3x2) ── */}
       <section style={{ padding: '16px' }}>
@@ -734,10 +738,16 @@ export function DetailPage({ symbol, assetType }: DetailPageProps): React.ReactE
       <ExternalLinksSection symbol={symbol} assetType={assetType} />
 
       {/* ── 하단 고정 CTA ── */}
+      {/* BottomNav(56px) + 면책고지(38px) 위에 표시되도록 bottom 오프셋 적용 */}
       <div
         style={{
-          position: 'sticky',
-          bottom: 0,
+          position: 'fixed',
+          bottom: 'calc(56px + 38px + env(safe-area-inset-bottom))',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '100%',
+          maxWidth: '430px',
+          zIndex: 20,
           background: 'white',
           borderTop: '1px solid #F1F5F9',
           padding: '12px 16px',
@@ -876,6 +886,13 @@ function ExternalLinksSection({
 
 // ─── RelatedSymbolsSection ────────────────────────────────────────────────────
 
+interface RelatedApiItem {
+  symbol: string;
+  name: string;
+  reason: string;
+  assetType: 'stock' | 'coin';
+}
+
 function RelatedSymbolsSection({
   symbol,
   assetType,
@@ -884,7 +901,31 @@ function RelatedSymbolsSection({
   assetType: 'stock' | 'coin';
 }): React.ReactElement {
   const router = useRouter();
-  const relatedSymbols = getRelatedSymbols(symbol, assetType);
+  const [apiRelated, setApiRelated] = useState<RelatedApiItem[] | null>(null);
+
+  // 크로스에셋 API 호출
+  useEffect(() => {
+    const controller = new AbortController();
+    const fetchRelated = async () => {
+      try {
+        const res = await fetch(`/api/v1/stocks/related?symbol=${symbol}`, {
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error('related fetch failed');
+        const json = (await res.json()) as { data: { related: RelatedApiItem[] } };
+        if (json.data.related.length > 0) {
+          setApiRelated(json.data.related);
+        }
+      } catch {
+        // API 실패 시 기존 로컬 매핑으로 폴백 (apiRelated null 유지)
+      }
+    };
+    void fetchRelated();
+    return () => controller.abort();
+  }, [symbol]);
+
+  // API 데이터가 있으면 사용, 없으면 기존 로컬 매핑 폴백
+  const localRelated = getRelatedSymbols(symbol, assetType);
 
   const handleSymbolClick = useCallback(
     (relatedSymbol: string, relatedAssetType: 'stock' | 'coin') => {
@@ -901,13 +942,93 @@ function RelatedSymbolsSection({
     [router, symbol]
   );
 
+  if (apiRelated !== null && apiRelated.length > 0) {
+    // API 데이터: 종목명 + 연관 이유 + [주식]/[코인] 배지
+    return (
+      <section style={{ padding: '16px' }}>
+        <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#0F172A', margin: '0 0 12px' }}>
+          관련 종목
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {apiRelated.map((item) => (
+            <div
+              key={item.symbol}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '10px 12px',
+                background: 'white',
+                border: '1px solid #E2E8F0',
+                borderRadius: '8px',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => handleSymbolClick(item.symbol, item.assetType)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  flex: 1,
+                  minWidth: 0,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 500, color: '#0F172A' }}>
+                    {item.name}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '10px',
+                      fontWeight: 600,
+                      padding: '1px 5px',
+                      borderRadius: '4px',
+                      background: item.assetType === 'coin' ? '#FEF3C7' : '#EFF6FF',
+                      color: item.assetType === 'coin' ? '#92400E' : '#1D4ED8',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {item.assetType === 'coin' ? '코인' : '주식'}
+                  </span>
+                </div>
+                <p style={{ fontSize: '11px', color: '#94A3B8', margin: 0 }}>{item.reason}</p>
+              </button>
+              <button
+                type="button"
+                onClick={(e) => handleCompareClick(item.symbol, e)}
+                style={{
+                  padding: '4px 10px',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  color: '#2563EB',
+                  background: 'white',
+                  border: '1px solid #2563EB',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  marginLeft: '8px',
+                }}
+              >
+                비교
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  // 로컬 매핑 폴백 (기존 UI 그대로)
   return (
     <section style={{ padding: '16px' }}>
       <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#0F172A', margin: '0 0 12px' }}>
         관련 종목
       </h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {relatedSymbols.map((item) => (
+        {localRelated.map((item) => (
           <div
             key={item.symbol}
             style={{
@@ -956,6 +1077,288 @@ function RelatedSymbolsSection({
             </button>
           </div>
         ))}
+      </div>
+    </section>
+  );
+}
+
+// ─── OrderBookSection ─────────────────────────────────────────────────────────
+
+interface OrderBookEntry {
+  price: number;
+  volume: number;
+}
+
+interface OrderBook {
+  asks: OrderBookEntry[];
+  bids: OrderBookEntry[];
+}
+
+function seededRandom(seed: number): number {
+  return (((seed * 1664525 + 1013904223) | 0) >>> 0) / 0xffffffff;
+}
+
+function generateOrderBook(basePrice: number, symbol: string): OrderBook {
+  const asks: OrderBookEntry[] = [];
+  const bids: OrderBookEntry[] = [];
+
+  // symbol을 숫자 seed로 변환
+  let symbolSeed = 0;
+  for (let k = 0; k < symbol.length; k++) {
+    symbolSeed = (symbolSeed * 31 + symbol.charCodeAt(k)) | 0;
+  }
+
+  for (let i = 5; i >= 1; i--) {
+    const price = Math.round(basePrice * (1 + i * 0.001));
+    const seed = Math.abs(symbolSeed ^ (i * 7919));
+    const volume = Math.floor(seededRandom(seed) * 4000 + 500);
+    asks.push({ price, volume });
+  }
+  for (let i = 1; i <= 5; i++) {
+    const price = Math.round(basePrice * (1 - i * 0.001));
+    const seed = Math.abs(symbolSeed ^ (i * 6271 + 1000));
+    const volume = Math.floor(seededRandom(seed) * 4000 + 500);
+    bids.push({ price, volume });
+  }
+
+  return { asks, bids };
+}
+
+function OrderBookSection({
+  symbol,
+  basePrice,
+}: {
+  symbol: string;
+  basePrice: number;
+}): React.ReactElement {
+  const { asks, bids } = generateOrderBook(basePrice, symbol);
+
+  const allVolumes = [...asks, ...bids].map((e) => e.volume);
+  const maxVolume = Math.max(...allVolumes);
+
+  const pctFromBase = (price: number): string => {
+    const rate = ((price - basePrice) / basePrice) * 100;
+    const sign = rate >= 0 ? '+' : '';
+    return `${sign}${rate.toFixed(2)}%`;
+  };
+
+  return (
+    <section
+      style={{
+        background: 'white',
+        borderRadius: '16px',
+        padding: '16px',
+        margin: '16px',
+        border: '1px solid #E2E8F0',
+      }}
+    >
+      {/* 헤더 */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '12px',
+        }}
+      >
+        <span style={{ fontSize: '14px', fontWeight: 600, color: '#0F172A' }}>
+          호가창
+        </span>
+        <button
+          type="button"
+          style={{
+            fontSize: '12px',
+            fontWeight: 500,
+            color: '#64748B',
+            background: '#F1F5F9',
+            border: 'none',
+            borderRadius: '6px',
+            padding: '4px 10px',
+            cursor: 'default',
+          }}
+        >
+          5단계 ▾
+        </button>
+      </div>
+
+      {/* 컬럼 헤더 */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr 1fr',
+          fontSize: '11px',
+          color: '#94A3B8',
+          fontFamily: 'Menlo, Consolas, monospace',
+          marginBottom: '4px',
+          padding: '0 4px',
+        }}
+      >
+        <span>잔량</span>
+        <span style={{ textAlign: 'center' }}>가격</span>
+        <span style={{ textAlign: 'right' }}>등락</span>
+      </div>
+
+      <div style={{ borderTop: '1px solid #E2E8F0', marginBottom: '2px' }} />
+
+      {/* 매도 (ask) 행 — 위에서 아래로 가격 내림차순 */}
+      {asks.map((entry) => {
+        const barWidth = `${Math.round((entry.volume / maxVolume) * 100)}%`;
+        const pct = pctFromBase(entry.price);
+        return (
+          <div
+            key={entry.price}
+            style={{
+              position: 'relative',
+              height: '32px',
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr 1fr',
+              alignItems: 'center',
+              fontSize: '13px',
+              fontFamily: 'Menlo, Consolas, monospace',
+              padding: '0 4px',
+              overflow: 'hidden',
+            }}
+          >
+            {/* 배경 바 (오른쪽 정렬) */}
+            <div
+              style={{
+                position: 'absolute',
+                right: 0,
+                top: 0,
+                height: '100%',
+                width: barWidth,
+                background: '#FEE2E2',
+                zIndex: 0,
+              }}
+            />
+            <span style={{ position: 'relative', zIndex: 1, color: '#0F172A' }}>
+              {entry.volume.toLocaleString('ko-KR')}
+            </span>
+            <span
+              style={{
+                position: 'relative',
+                zIndex: 1,
+                textAlign: 'center',
+                color: '#E84040',
+                fontWeight: 500,
+              }}
+            >
+              {entry.price.toLocaleString('ko-KR')}
+            </span>
+            <span
+              style={{
+                position: 'relative',
+                zIndex: 1,
+                textAlign: 'right',
+                color: '#E84040',
+              }}
+            >
+              {pct}
+            </span>
+          </div>
+        );
+      })}
+
+      {/* 현재가 구분선 */}
+      <div
+        style={{
+          height: '32px',
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr 1fr',
+          alignItems: 'center',
+          background: '#FFFBEB',
+          borderLeft: '3px solid #F59E0B',
+          padding: '0 4px',
+          fontFamily: 'Menlo, Consolas, monospace',
+          fontSize: '13px',
+          fontWeight: 700,
+          color: '#0F172A',
+          margin: '2px 0',
+        }}
+      >
+        <span style={{ color: '#94A3B8', fontSize: '11px' }}>현재가</span>
+        <span style={{ textAlign: 'center' }}>
+          {basePrice.toLocaleString('ko-KR')}
+        </span>
+        <span style={{ textAlign: 'right', color: '#94A3B8' }}>+0.00%</span>
+      </div>
+
+      {/* 매수 (bid) 행 — 위에서 아래로 가격 내림차순 */}
+      {bids.map((entry) => {
+        const barWidth = `${Math.round((entry.volume / maxVolume) * 100)}%`;
+        const pct = pctFromBase(entry.price);
+        return (
+          <div
+            key={entry.price}
+            style={{
+              position: 'relative',
+              height: '32px',
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr 1fr',
+              alignItems: 'center',
+              fontSize: '13px',
+              fontFamily: 'Menlo, Consolas, monospace',
+              padding: '0 4px',
+              overflow: 'hidden',
+            }}
+          >
+            {/* 배경 바 (왼쪽 정렬) */}
+            <div
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                height: '100%',
+                width: barWidth,
+                background: '#DBEAFE',
+                zIndex: 0,
+              }}
+            />
+            <span style={{ position: 'relative', zIndex: 1, color: '#0F172A' }}>
+              {entry.volume.toLocaleString('ko-KR')}
+            </span>
+            <span
+              style={{
+                position: 'relative',
+                zIndex: 1,
+                textAlign: 'center',
+                color: '#2563EB',
+                fontWeight: 500,
+              }}
+            >
+              {entry.price.toLocaleString('ko-KR')}
+            </span>
+            <span
+              style={{
+                position: 'relative',
+                zIndex: 1,
+                textAlign: 'right',
+                color: '#2563EB',
+              }}
+            >
+              {pct}
+            </span>
+          </div>
+        );
+      })}
+
+      <div style={{ borderTop: '1px solid #E2E8F0', marginTop: '2px' }} />
+
+      {/* 컬럼 하단 레이블 */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr 1fr',
+          fontSize: '11px',
+          color: '#94A3B8',
+          fontFamily: 'Menlo, Consolas, monospace',
+          marginTop: '4px',
+          padding: '0 4px',
+        }}
+      >
+        <span>매수 잔량</span>
+        <span style={{ textAlign: 'center' }}>가격</span>
+        <span />
       </div>
     </section>
   );
