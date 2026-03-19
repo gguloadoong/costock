@@ -1,0 +1,12 @@
+{
+  "name": "costock",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "cd apps/web && npm install && npm run build",
+    "dev": "cd apps/web && npm run dev"
+  },
+  "devDependencies": {
+    "next": "14.1.0"
+  }
+}
