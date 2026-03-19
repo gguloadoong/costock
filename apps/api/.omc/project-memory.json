@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1773805293718,
+  "lastScanned": 1773896762384,
   "projectRoot": "/Users/bong/CoStock/apps/api",
   "techStack": {
     "languages": [
@@ -67,20 +67,65 @@
   },
   "customNotes": [],
   "directoryMap": {
+    "dist": {
+      "path": "dist",
+      "purpose": "Distribution/build output",
+      "fileCount": 4,
+      "lastAccessed": 1773896762371,
+      "keyFiles": [
+        "index.d.ts",
+        "index.d.ts.map",
+        "index.js",
+        "index.js.map"
+      ]
+    },
     "src": {
       "path": "src",
       "purpose": "Source code",
       "fileCount": 1,
-      "lastAccessed": 1773805293707,
+      "lastAccessed": 1773896762374,
       "keyFiles": [
         "index.ts"
+      ]
+    },
+    "dist/lib": {
+      "path": "dist/lib",
+      "purpose": "Library code",
+      "fileCount": 12,
+      "lastAccessed": 1773896762375,
+      "keyFiles": [
+        "hantooToken.d.ts",
+        "hantooToken.d.ts.map",
+        "hantooToken.js"
+      ]
+    },
+    "dist/middleware": {
+      "path": "dist/middleware",
+      "purpose": "Middleware",
+      "fileCount": 4,
+      "lastAccessed": 1773896762375,
+      "keyFiles": [
+        "errorHandler.d.ts",
+        "errorHandler.d.ts.map",
+        "errorHandler.js"
+      ]
+    },
+    "dist/routes": {
+      "path": "dist/routes",
+      "purpose": "Route handlers",
+      "fileCount": 32,
+      "lastAccessed": 1773896762375,
+      "keyFiles": [
+        "auth.d.ts",
+        "auth.d.ts.map",
+        "auth.js"
       ]
     },
     "src/lib": {
       "path": "src/lib",
       "purpose": "Library code",
-      "fileCount": 3,
-      "lastAccessed": 1773805293707,
+      "fileCount": 4,
+      "lastAccessed": 1773896762375,
       "keyFiles": [
         "hantooToken.ts",
         "logger.ts",
@@ -91,7 +136,7 @@
       "path": "src/middleware",
       "purpose": "Middleware",
       "fileCount": 1,
-      "lastAccessed": 1773805293709,
+      "lastAccessed": 1773896762376,
       "keyFiles": [
         "errorHandler.ts"
       ]
@@ -99,20 +144,86 @@
     "src/routes": {
       "path": "src/routes",
       "purpose": "Route handlers",
-      "fileCount": 6,
-      "lastAccessed": 1773805293711,
+      "fileCount": 9,
+      "lastAccessed": 1773896762376,
       "keyFiles": [
         "auth.ts",
-        "portfolio.ts",
-        "price.ts"
+        "market.ts",
+        "news.ts"
       ]
     }
   },
   "hotPaths": [
     {
-      "path": ".env",
+      "path": "src/lib/traderEngine.ts",
+      "accessCount": 38,
+      "lastAccessed": 1773902404989,
+      "type": "directory"
+    },
+    {
+      "path": "src/routes/news.ts",
+      "accessCount": 14,
+      "lastAccessed": 1773900768644,
+      "type": "file"
+    },
+    {
+      "path": "src/routes/traders.ts",
+      "accessCount": 8,
+      "lastAccessed": 1773901300533,
+      "type": "file"
+    },
+    {
+      "path": "src/index.ts",
+      "accessCount": 8,
+      "lastAccessed": 1773901742982,
+      "type": "file"
+    },
+    {
+      "path": "src/routes/search.ts",
+      "accessCount": 8,
+      "lastAccessed": 1773902060447,
+      "type": "file"
+    },
+    {
+      "path": "src/routes/ws.ts",
+      "accessCount": 5,
+      "lastAccessed": 1773902152130,
+      "type": "file"
+    },
+    {
+      "path": "src/lib/priceService.ts",
+      "accessCount": 4,
+      "lastAccessed": 1773902067315,
+      "type": "file"
+    },
+    {
+      "path": "src/routes/price.ts",
+      "accessCount": 3,
+      "lastAccessed": 1773902317146,
+      "type": "file"
+    },
+    {
+      "path": "src",
       "accessCount": 2,
-      "lastAccessed": 1773805715474,
+      "lastAccessed": 1773901285962,
+      "type": "directory"
+    },
+    {
+      "path": "src/lib/logger.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773901194760,
+      "type": "file"
+    },
+    {
+      "path": "",
+      "accessCount": 1,
+      "lastAccessed": 1773901229555,
+      "type": "directory"
+    },
+    {
+      "path": "src/lib/notificationService.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773901255343,
       "type": "file"
     }
   ],

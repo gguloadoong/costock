@@ -129,62 +129,110 @@
   "hotPaths": [
     {
       "path": "src/app/page.tsx",
-      "accessCount": 43,
-      "lastAccessed": 1773812164334,
+      "accessCount": 80,
+      "lastAccessed": 1773894956592,
       "type": "file"
     },
     {
       "path": "src/components/detail/DetailPage.tsx",
-      "accessCount": 22,
-      "lastAccessed": 1773811979725,
-      "type": "file"
-    },
-    {
-      "path": "src/components/SearchBar.tsx",
-      "accessCount": 9,
-      "lastAccessed": 1773811861417,
-      "type": "file"
-    },
-    {
-      "path": "src/app/layout.tsx",
-      "accessCount": 8,
-      "lastAccessed": 1773812164078,
+      "accessCount": 30,
+      "lastAccessed": 1773890880753,
       "type": "file"
     },
     {
       "path": "src/app/my/page.tsx",
-      "accessCount": 6,
-      "lastAccessed": 1773811778772,
+      "accessCount": 14,
+      "lastAccessed": 1773890844859,
       "type": "file"
     },
     {
-      "path": "src/lib/watchlistStorage.ts",
-      "accessCount": 5,
-      "lastAccessed": 1773811473228,
+      "path": "src/app/layout.tsx",
+      "accessCount": 12,
+      "lastAccessed": 1773890839472,
       "type": "file"
     },
     {
-      "path": "",
-      "accessCount": 5,
-      "lastAccessed": 1773811927448,
-      "type": "directory"
-    },
-    {
-      "path": "src/design-system/components/PriceCard/PriceCard.tsx",
-      "accessCount": 4,
-      "lastAccessed": 1773810037338,
+      "path": "src/components/SearchBar.tsx",
+      "accessCount": 11,
+      "lastAccessed": 1773847951718,
       "type": "file"
     },
     {
       "path": "src/app/explore/page.tsx",
-      "accessCount": 4,
-      "lastAccessed": 1773811860737,
+      "accessCount": 8,
+      "lastAccessed": 1773847397359,
+      "type": "file"
+    },
+    {
+      "path": "src/lib/watchlistStorage.ts",
+      "accessCount": 7,
+      "lastAccessed": 1773846361266,
+      "type": "file"
+    },
+    {
+      "path": "src/app/globals.css",
+      "accessCount": 7,
+      "lastAccessed": 1773847281079,
+      "type": "file"
+    },
+    {
+      "path": "",
+      "accessCount": 7,
+      "lastAccessed": 1773901634441,
+      "type": "directory"
+    },
+    {
+      "path": "src/design-system/components/PriceCard/PriceCard.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1773847774203,
+      "type": "file"
+    },
+    {
+      "path": "src/app/trader/[id]/page.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1773901629819,
+      "type": "file"
+    },
+    {
+      "path": "src/components/MarketIndexBar.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1773846297076,
+      "type": "file"
+    },
+    {
+      "path": "src",
+      "accessCount": 5,
+      "lastAccessed": 1773846375271,
+      "type": "directory"
+    },
+    {
+      "path": "src/app/market/page.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1773847661432,
       "type": "file"
     },
     {
       "path": "src/types/market.ts",
+      "accessCount": 5,
+      "lastAccessed": 1773847952132,
+      "type": "file"
+    },
+    {
+      "path": "src/app/stock/[symbol]/page.tsx",
       "accessCount": 4,
-      "lastAccessed": 1773811944401,
+      "lastAccessed": 1773846242888,
+      "type": "file"
+    },
+    {
+      "path": "src/app/coin/[symbol]/page.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1773846244218,
+      "type": "file"
+    },
+    {
+      "path": "src/components/InstrumentList.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1773847779649,
       "type": "file"
     },
     {
@@ -200,9 +248,33 @@
       "type": "file"
     },
     {
-      "path": "src/app/globals.css",
+      "path": "src/lib/marketHours.ts",
       "accessCount": 3,
-      "lastAccessed": 1773811903052,
+      "lastAccessed": 1773846276874,
+      "type": "file"
+    },
+    {
+      "path": "src/components/Toast.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1773846379977,
+      "type": "file"
+    },
+    {
+      "path": "src/components/PriceTicker.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1773890815744,
+      "type": "file"
+    },
+    {
+      "path": "src/components/OnboardingToast.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1773890815981,
+      "type": "file"
+    },
+    {
+      "path": "src/lib/api.ts",
+      "accessCount": 3,
+      "lastAccessed": 1773901638426,
       "type": "file"
     },
     {
@@ -218,16 +290,16 @@
       "type": "file"
     },
     {
-      "path": "src/components/Toast.tsx",
+      "path": "src/components/TabBar.tsx",
       "accessCount": 2,
-      "lastAccessed": 1773810033114,
+      "lastAccessed": 1773846987293,
       "type": "file"
     },
     {
-      "path": "src",
+      "path": "src/components/CrossAssetInsight.tsx",
       "accessCount": 2,
-      "lastAccessed": 1773811727094,
-      "type": "directory"
+      "lastAccessed": 1773890812635,
+      "type": "file"
     },
     {
       "path": "src/design-system",
@@ -251,24 +323,6 @@
       "path": "src/components/BottomNavigation.tsx",
       "accessCount": 1,
       "lastAccessed": 1773810027965,
-      "type": "file"
-    },
-    {
-      "path": "src/app/stock/[symbol]/page.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1773810050847,
-      "type": "file"
-    },
-    {
-      "path": "src/app/coin/[symbol]/page.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1773810051877,
-      "type": "file"
-    },
-    {
-      "path": "src/app/market/page.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1773810117267,
       "type": "file"
     },
     {
@@ -320,21 +374,51 @@
       "type": "file"
     },
     {
-      "path": "src/components/TabBar.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1773811972855,
-      "type": "file"
-    },
-    {
-      "path": "src/components/InstrumentList.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1773811984321,
-      "type": "file"
-    },
-    {
       "path": ".env.example",
       "accessCount": 1,
       "lastAccessed": 1773812165235,
+      "type": "file"
+    },
+    {
+      "path": "src/components/ErrorBoundary.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773846223685,
+      "type": "file"
+    },
+    {
+      "path": "src/components/detail/DetailSkeleton.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773846234038,
+      "type": "file"
+    },
+    {
+      "path": "src/lib/holdingStorage.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773846937583,
+      "type": "file"
+    },
+    {
+      "path": "src/lib/useOnlineStatus.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773847033530,
+      "type": "file"
+    },
+    {
+      "path": "src/components/OfflineBanner.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773847034000,
+      "type": "file"
+    },
+    {
+      "path": "src/lib/usePriceFlash.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773847181183,
+      "type": "file"
+    },
+    {
+      "path": "src/components/AllocationChart.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773847771598,
       "type": "file"
     }
   ],

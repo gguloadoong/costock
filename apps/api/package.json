@@ -25,6 +25,7 @@
     "kafkajs": "^2.2.4",
     "pg": "^8.11.3",
     "postgres": "^3.4.3",
+    "yahoo-finance2": "^3.13.2",
     "zod": "^3.22.4"
   },
   "devDependencies": {

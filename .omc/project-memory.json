@@ -1,0 +1,308 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1773847940174,
+  "projectRoot": "/Users/bong/CoStock",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "scripts"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "apps": {
+      "path": "apps",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773847940165,
+      "keyFiles": []
+    },
+    "infra": {
+      "path": "infra",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773847940165,
+      "keyFiles": []
+    },
+    "packages": {
+      "path": "packages",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773847940165,
+      "keyFiles": []
+    },
+    "scripts": {
+      "path": "scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 2,
+      "lastAccessed": 1773847940165,
+      "keyFiles": [
+        "setup-dev.sh",
+        "start-dev.sh"
+      ]
+    },
+    "apps/api": {
+      "path": "apps/api",
+      "purpose": "API routes",
+      "fileCount": 5,
+      "lastAccessed": 1773847940166,
+      "keyFiles": [
+        "package-lock.json",
+        "package.json",
+        "tsconfig.json"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "apps/web/src/app/my/page.tsx",
+      "accessCount": 26,
+      "lastAccessed": 1773883296259,
+      "type": "file"
+    },
+    {
+      "path": "apps/web/src/components/detail/DetailPage.tsx",
+      "accessCount": 22,
+      "lastAccessed": 1773890923193,
+      "type": "file"
+    },
+    {
+      "path": "apps/web/src/app/page.tsx",
+      "accessCount": 21,
+      "lastAccessed": 1773901331451,
+      "type": "file"
+    },
+    {
+      "path": "apps/web/src/app/market/page.tsx",
+      "accessCount": 15,
+      "lastAccessed": 1773883293045,
+      "type": "file"
+    },
+    {
+      "path": "apps/api/src/routes/stock.ts",
+      "accessCount": 6,
+      "lastAccessed": 1773890940689,
+      "type": "file"
+    },
+    {
+      "path": "apps/api/src/routes/price.ts",
+      "accessCount": 6,
+      "lastAccessed": 1773901482512,
+      "type": "file"
+    },
+    {
+      "path": "apps/web/src/app/explore/page.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1773883292839,
+      "type": "file"
+    },
+    {
+      "path": ".project/backlog.md",
+      "accessCount": 4,
+      "lastAccessed": 1773884629995,
+      "type": "file"
+    },
+    {
+      "path": "",
+      "accessCount": 4,
+      "lastAccessed": 1773886436350,
+      "type": "directory"
+    },
+    {
+      "path": "apps/api/src/index.ts",
+      "accessCount": 4,
+      "lastAccessed": 1773901335012,
+      "type": "file"
+    },
+    {
+      "path": "apps/web/src",
+      "accessCount": 3,
+      "lastAccessed": 1773848277592,
+      "type": "directory"
+    },
+    {
+      "path": "apps/web",
+      "accessCount": 3,
+      "lastAccessed": 1773848455674,
+      "type": "directory"
+    },
+    {
+      "path": "apps/api/src/routes/news.ts",
+      "accessCount": 3,
+      "lastAccessed": 1773886620251,
+      "type": "file"
+    },
+    {
+      "path": "apps/api/src/routes/search.ts",
+      "accessCount": 3,
+      "lastAccessed": 1773890924575,
+      "type": "file"
+    },
+    {
+      "path": "apps/web/src/lib/formatters.ts",
+      "accessCount": 2,
+      "lastAccessed": 1773848270073,
+      "type": "file"
+    },
+    {
+      "path": "apps/web/src/app/compare/page.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1773883295759,
+      "type": "file"
+    },
+    {
+      "path": "apps/web/src/data/mockData.ts",
+      "accessCount": 2,
+      "lastAccessed": 1773886448127,
+      "type": "file"
+    },
+    {
+      "path": "apps/web/src/app/layout.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1773890921890,
+      "type": "file"
+    },
+    {
+      "path": "apps/api/src/lib/traderEngine.ts",
+      "accessCount": 2,
+      "lastAccessed": 1773901490875,
+      "type": "file"
+    },
+    {
+      "path": "vercel.json",
+      "accessCount": 2,
+      "lastAccessed": 1773935585169,
+      "type": "file"
+    },
+    {
+      "path": "apps/web/next.config.js",
+      "accessCount": 2,
+      "lastAccessed": 1773935595987,
+      "type": "file"
+    },
+    {
+      "path": "apps/web/src/components/InstrumentList.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773847986182,
+      "type": "file"
+    },
+    {
+      "path": "apps/web/src/lib/alertStorage.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773848073498,
+      "type": "file"
+    },
+    {
+      "path": "apps/web/src/app/stock/[symbol]/page.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773848269677,
+      "type": "file"
+    },
+    {
+      "path": "apps/web/src/components/BottomNavigation.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773848280382,
+      "type": "file"
+    },
+    {
+      "path": "apps/web/src/lib/marketHours.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773848280416,
+      "type": "file"
+    },
+    {
+      "path": "apps/web/src/lib/shareUrl.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773848465115,
+      "type": "file"
+    },
+    {
+      "path": ".project/roadmap.md",
+      "accessCount": 1,
+      "lastAccessed": 1773883278971,
+      "type": "file"
+    },
+    {
+      "path": ".project/decisions.md",
+      "accessCount": 1,
+      "lastAccessed": 1773883279073,
+      "type": "file"
+    },
+    {
+      "path": ".project/api-spec.md",
+      "accessCount": 1,
+      "lastAccessed": 1773883286343,
+      "type": "file"
+    },
+    {
+      "path": ".project/PRD.md",
+      "accessCount": 1,
+      "lastAccessed": 1773883286560,
+      "type": "file"
+    },
+    {
+      "path": "apps/api/src/routes/market.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773883296107,
+      "type": "file"
+    },
+    {
+      "path": ".project/meeting-notes/2026-03-19.md",
+      "accessCount": 1,
+      "lastAccessed": 1773884600176,
+      "type": "file"
+    },
+    {
+      "path": "apps/api/package.json",
+      "accessCount": 1,
+      "lastAccessed": 1773886516759,
+      "type": "file"
+    },
+    {
+      "path": "apps/web/src/components/CrossAssetInsight.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773890922735,
+      "type": "file"
+    },
+    {
+      "path": "apps/api/src/lib/notificationService.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773901325920,
+      "type": "file"
+    },
+    {
+      "path": "apps/web/src/components/OnboardingModal.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773901330725,
+      "type": "file"
+    },
+    {
+      "path": "apps/api/src/routes/traders.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773901334532,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

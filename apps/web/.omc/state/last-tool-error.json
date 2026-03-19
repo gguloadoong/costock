@@ -1,7 +1,7 @@
 {
   "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"cd /Users/bong/CoStock && git add . && git commit -m \\\"$(cat <<'EOF'\\nfeat: Sprint 2 — 상세 페이지, 탭 페이지, 모바일 UX 개선\\n\\n## 신규 페이지\\n- /stock/[symbol], /coin/[symbol]: 종목 상세 (TradingView 캔들차트, 뉴스...",
-  "error": "Exit code 1\nOn branch main\nYour branch is up to date with 'origin/main'.\n\nnothing to commit, working tree clean",
-  "timestamp": "2026-03-18T05:37:59.057Z",
+  "tool_input_preview": "{\"command\":\"curl -s http://localhost:3101/api/v1/traders/alpha/trades?limit=10\",\"description\":\"활동피드 API 응답 구조 확인\"}",
+  "error": "Exit code 1\n(eval):1: no matches found: http://localhost:3101/api/v1/traders/alpha/trades?limit=10",
+  "timestamp": "2026-03-19T05:51:54.947Z",
   "retry_count": 1
 }

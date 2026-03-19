@@ -1,7 +1,230 @@
 {
-  "agents": [],
-  "total_spawned": 0,
-  "total_completed": 0,
+  "agents": [
+    {
+      "agent_id": "a649b940d1cb8de7b",
+      "agent_type": "oh-my-claudecode:executor",
+      "started_at": "2026-03-18T15:08:55.139Z",
+      "parent_mode": "none",
+      "status": "running"
+    },
+    {
+      "agent_id": "a788eef360b77ef16",
+      "agent_type": "oh-my-claudecode:executor",
+      "started_at": "2026-03-18T15:09:14.691Z",
+      "parent_mode": "none",
+      "status": "running"
+    },
+    {
+      "agent_id": "a231a1f89537d5d76",
+      "agent_type": "oh-my-claudecode:explore",
+      "started_at": "2026-03-19T02:36:48.435Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T02:37:57.134Z",
+      "duration_ms": 68699
+    },
+    {
+      "agent_id": "a5bee31c55f88d1ac",
+      "agent_type": "oh-my-claudecode:executor",
+      "started_at": "2026-03-19T02:57:48.734Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T02:58:47.414Z",
+      "duration_ms": 58680
+    },
+    {
+      "agent_id": "aee399085da287c9e",
+      "agent_type": "oh-my-claudecode:executor",
+      "started_at": "2026-03-19T02:57:59.498Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T02:58:55.236Z",
+      "duration_ms": 55738
+    },
+    {
+      "agent_id": "a89a09e85218a055e",
+      "agent_type": "박소연",
+      "started_at": "2026-03-19T04:11:49.215Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T04:15:35.033Z",
+      "duration_ms": 225818
+    },
+    {
+      "agent_id": "a6206bd807a5490c2",
+      "agent_type": "이준혁",
+      "started_at": "2026-03-19T04:45:59.254Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T04:54:09.829Z",
+      "duration_ms": 490575
+    },
+    {
+      "agent_id": "ab2c08f7a964021fd",
+      "agent_type": "이준혁",
+      "started_at": "2026-03-19T04:59:57.493Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T05:07:01.652Z",
+      "duration_ms": 424159
+    },
+    {
+      "agent_id": "a2ab6a4c8f7b5a482",
+      "agent_type": "최재원",
+      "started_at": "2026-03-19T05:00:15.875Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T05:04:53.292Z",
+      "duration_ms": 277417
+    },
+    {
+      "agent_id": "abf629a97baa9b562",
+      "agent_type": "김민준",
+      "started_at": "2026-03-19T05:00:38.425Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T05:04:44.768Z",
+      "duration_ms": 246343
+    },
+    {
+      "agent_id": "a6dc9d19ac816ac49",
+      "agent_type": "박소연",
+      "started_at": "2026-03-19T05:00:55.353Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T05:02:52.968Z",
+      "duration_ms": 117615
+    },
+    {
+      "agent_id": "a12873dd926090d72",
+      "agent_type": "김민준",
+      "started_at": "2026-03-19T05:22:21.232Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T05:25:59.777Z",
+      "duration_ms": 218545
+    },
+    {
+      "agent_id": "a99757075089e89e9",
+      "agent_type": "이준혁",
+      "started_at": "2026-03-19T06:09:43.061Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T06:10:55.704Z",
+      "duration_ms": 72643
+    },
+    {
+      "agent_id": "acd80f3381ded96ef",
+      "agent_type": "김민준",
+      "started_at": "2026-03-19T06:11:19.721Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T06:13:03.127Z",
+      "duration_ms": 103406
+    },
+    {
+      "agent_id": "ab74197b4ac8addec",
+      "agent_type": "최재원",
+      "started_at": "2026-03-19T06:11:31.580Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T06:13:53.908Z",
+      "duration_ms": 142328
+    },
+    {
+      "agent_id": "ab0a97857b7c0284c",
+      "agent_type": "이준혁",
+      "started_at": "2026-03-19T06:11:47.370Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T06:15:10.588Z",
+      "duration_ms": 203218
+    },
+    {
+      "agent_id": "a4b8da6b3c2e4a908",
+      "agent_type": "김민준",
+      "started_at": "2026-03-19T06:13:20.371Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T06:14:27.174Z",
+      "duration_ms": 66803
+    },
+    {
+      "agent_id": "a95c504b623524f5d",
+      "agent_type": "정예린",
+      "started_at": "2026-03-19T06:13:35.409Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T06:16:27.749Z",
+      "duration_ms": 172340
+    },
+    {
+      "agent_id": "a8bcd2566d21f58bf",
+      "agent_type": "박소연",
+      "started_at": "2026-03-19T06:14:50.885Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T06:17:10.667Z",
+      "duration_ms": 139782
+    },
+    {
+      "agent_id": "ac2175d8b49f59b20",
+      "agent_type": "최재원",
+      "started_at": "2026-03-19T06:15:10.750Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T06:17:18.222Z",
+      "duration_ms": 127472
+    },
+    {
+      "agent_id": "a22df28afd618db40",
+      "agent_type": "한서준",
+      "started_at": "2026-03-19T06:15:48.371Z",
+      "parent_mode": "none",
+      "status": "running"
+    },
+    {
+      "agent_id": "a36683f66262b2ba8",
+      "agent_type": "최재원",
+      "started_at": "2026-03-19T06:19:44.634Z",
+      "parent_mode": "none",
+      "status": "running"
+    },
+    {
+      "agent_id": "a061e0efb7b8de686",
+      "agent_type": "김민준",
+      "started_at": "2026-03-19T06:20:03.465Z",
+      "parent_mode": "none",
+      "status": "running"
+    },
+    {
+      "agent_id": "a71c70d7eb9e94918",
+      "agent_type": "박소연",
+      "started_at": "2026-03-19T06:20:20.608Z",
+      "parent_mode": "none",
+      "status": "running"
+    },
+    {
+      "agent_id": "a46dda9f22c71c05f",
+      "agent_type": "be",
+      "started_at": "2026-03-19T06:33:51.685Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T06:34:30.968Z",
+      "duration_ms": 39283
+    },
+    {
+      "agent_id": "a2639e3f7525ec02a",
+      "agent_type": "fe",
+      "started_at": "2026-03-19T06:34:05.153Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T06:37:32.687Z",
+      "duration_ms": 207534
+    }
+  ],
+  "total_spawned": 26,
+  "total_completed": 20,
   "total_failed": 0,
-  "last_updated": "2026-03-18T05:03:07.499Z"
+  "last_updated": "2026-03-19T15:48:52.195Z"
 }

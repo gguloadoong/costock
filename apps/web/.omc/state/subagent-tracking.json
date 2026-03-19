@@ -193,10 +193,140 @@
       "status": "completed",
       "completed_at": "2026-03-18T05:36:15.016Z",
       "duration_ms": 256933
+    },
+    {
+      "agent_id": "a2409b75917932630",
+      "agent_type": "oh-my-claudecode:executor",
+      "started_at": "2026-03-18T05:41:44.869Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-18T11:19:39.838Z",
+      "duration_ms": 20274969
+    },
+    {
+      "agent_id": "a43b6f270606b9c96",
+      "agent_type": "oh-my-claudecode:executor",
+      "started_at": "2026-03-18T05:42:08.010Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-18T11:19:39.785Z",
+      "duration_ms": 20251775
+    },
+    {
+      "agent_id": "afc11459251da9b3d",
+      "agent_type": "oh-my-claudecode:executor",
+      "started_at": "2026-03-18T15:03:10.747Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-18T15:05:13.430Z",
+      "duration_ms": 122683
+    },
+    {
+      "agent_id": "afd057d01f03d41f5",
+      "agent_type": "oh-my-claudecode:executor",
+      "started_at": "2026-03-18T15:03:32.478Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-18T15:04:17.953Z",
+      "duration_ms": 45475
+    },
+    {
+      "agent_id": "af1c45c1218121b96",
+      "agent_type": "oh-my-claudecode:executor",
+      "started_at": "2026-03-18T15:05:44.247Z",
+      "parent_mode": "none",
+      "status": "running"
+    },
+    {
+      "agent_id": "ac833d45be892d1d7",
+      "agent_type": "oh-my-claudecode:executor",
+      "started_at": "2026-03-18T15:06:07.318Z",
+      "parent_mode": "none",
+      "status": "running"
+    },
+    {
+      "agent_id": "ab7b2edd3f5aa2237",
+      "agent_type": "oh-my-claudecode:executor",
+      "started_at": "2026-03-19T03:25:55.673Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T03:27:11.460Z",
+      "duration_ms": 75787
+    },
+    {
+      "agent_id": "a2b865edc825adaf9",
+      "agent_type": "oh-my-claudecode:executor",
+      "started_at": "2026-03-19T03:26:06.734Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T03:27:36.503Z",
+      "duration_ms": 89769
+    },
+    {
+      "agent_id": "a4b3a50e609218473",
+      "agent_type": "oh-my-claudecode:executor",
+      "started_at": "2026-03-19T03:26:28.537Z",
+      "parent_mode": "none",
+      "status": "running"
+    },
+    {
+      "agent_id": "a151c7e4cec2d2371",
+      "agent_type": "oh-my-claudecode:executor",
+      "started_at": "2026-03-19T03:26:44.619Z",
+      "parent_mode": "none",
+      "status": "running"
+    },
+    {
+      "agent_id": "a2993172299d2d97e",
+      "agent_type": "최재원",
+      "started_at": "2026-03-19T05:13:28.919Z",
+      "parent_mode": "none",
+      "status": "running"
+    },
+    {
+      "agent_id": "a49d02b3e05db1f24",
+      "agent_type": "최재원",
+      "started_at": "2026-03-19T05:17:10.899Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T05:18:49.446Z",
+      "duration_ms": 98547
+    },
+    {
+      "agent_id": "a99b6ebbea32383c2",
+      "agent_type": "정예린",
+      "started_at": "2026-03-19T05:51:45.972Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T05:53:14.141Z",
+      "duration_ms": 88169
+    },
+    {
+      "agent_id": "a9ae6513332e3112b",
+      "agent_type": "최재원",
+      "started_at": "2026-03-19T05:56:15.189Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-19T06:00:59.107Z",
+      "duration_ms": 283918
+    },
+    {
+      "agent_id": "a5121d42e3cb4ff43",
+      "agent_type": "qa",
+      "started_at": "2026-03-19T06:26:52.975Z",
+      "parent_mode": "none",
+      "status": "running"
+    },
+    {
+      "agent_id": "a8d120347bd17e9c2",
+      "agent_type": "fe",
+      "started_at": "2026-03-19T06:27:05.329Z",
+      "parent_mode": "none",
+      "status": "running"
     }
   ],
-  "total_spawned": 22,
-  "total_completed": 20,
+  "total_spawned": 38,
+  "total_completed": 28,
   "total_failed": 0,
-  "last_updated": "2026-03-18T05:40:07.022Z"
+  "last_updated": "2026-03-19T06:27:05.432Z"
 }
