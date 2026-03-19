@@ -1,6 +1,6 @@
 // ─── API 기본 설정 ────────────────────────────────────────────────────────────
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3101';
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 // ─── 트레이더 타입 ─────────────────────────────────────────────────────────────
 

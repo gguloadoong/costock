@@ -1,5 +1,5 @@
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_KEY ?? ''
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3101'
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? ''
 
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
   if (typeof window === 'undefined') return 'denied'

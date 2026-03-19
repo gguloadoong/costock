@@ -116,7 +116,7 @@ const SYMBOL_META: Record<string, SymbolMeta> = {
 
 // ─── 환경변수 ────────────────────────────────────────────────────────────────
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3101';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 // ─── 초기 가격 HTTP 조회 훅 ──────────────────────────────────────────────────
 // usePriceStream(WebSocket)이 연결되기 전 초기 가격을 API로 채운다.
