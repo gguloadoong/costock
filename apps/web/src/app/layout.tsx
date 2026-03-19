@@ -70,6 +70,9 @@ export default function RootLayout({
 }): React.ReactElement {
   return (
     <html lang="ko">
+      <head>
+        <link rel="stylesheet" as="style" crossOrigin="anonymous" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css" />
+      </head>
       <body style={{ background: '#F8FAFC', margin: 0, padding: 0 }}>
         <ServiceWorkerRegistrar />
         <OfflineBanner />
@@ -88,11 +91,40 @@ export default function RootLayout({
             {/* BottomNavigation 높이 + safe-area만큼 하단 여백 */}
             <main
               style={{
-                paddingBottom: 'calc(56px + env(safe-area-inset-bottom))',
+                paddingBottom: 'calc(56px + 52px + env(safe-area-inset-bottom))',
               }}
             >
               {children}
             </main>
+
+            {/* 면책 고지 — BottomNavigation 위, safe-area 고려 */}
+            <footer
+              style={{
+                position: 'fixed',
+                bottom: 'calc(56px + env(safe-area-inset-bottom))',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '100%',
+                maxWidth: '430px',
+                padding: '6px 16px',
+                background: 'rgba(248, 250, 252, 0.95)',
+                borderTop: '1px solid #E2E8F0',
+                zIndex: 19,
+              }}
+            >
+              <p
+                style={{
+                  fontSize: '11px',
+                  color: '#9CA3AF',
+                  margin: 0,
+                  lineHeight: 1.5,
+                  textAlign: 'center',
+                }}
+              >
+                본 서비스는 투자 정보 제공을 목적으로 하며, 투자 권유가 아닙니다.
+                모든 투자 결정은 본인의 판단과 책임 하에 이루어져야 합니다.
+              </p>
+            </footer>
           </div>
         </Providers>
       </body>

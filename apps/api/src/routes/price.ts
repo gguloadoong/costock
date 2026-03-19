@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { getPriceFromCache, setPriceCache, getCryptoPricesFromCache } from '../lib/priceCache'
 import { logger } from '../lib/logger'
+import { getPrice, getAllPrices } from '../lib/priceService'
 
 const CandleQuerySchema = z.object({
   symbol: z.string().min(1).max(20),
@@ -82,6 +83,24 @@ function generateMockCandles(symbol: string, interval: string, limit: number): C
   })
 }
 
+// ─── 가격 유효성 검사 ───────────────────────────────────────────────────────
+
+/**
+ * 가격 이상값 필터링
+ * - 0원 또는 음수: 무효
+ * - 비유한 수 (Infinity, NaN): 무효
+ * - 이전 가격 대비 ±30% 초과 급변: 무효 (stale 표시)
+ */
+function isValidPrice(price: number, prevPrice?: number): boolean {
+  if (price <= 0) return false;
+  if (!isFinite(price)) return false;
+  if (prevPrice && prevPrice > 0) {
+    const changeRate = Math.abs((price - prevPrice) / prevPrice);
+    if (changeRate > 0.3) return false; // 30% 급변
+  }
+  return true;
+}
+
 /**
  * 가격 조회 API
  *
@@ -90,6 +109,24 @@ function generateMockCandles(symbol: string, interval: string, limit: number): C
  * GET /api/v1/prices/:symbol   — 단일 종목 현재가 + 기본 정보
  */
 export async function priceRoutes(app: FastifyInstance) {
+  /**
+   * PriceService 실시간 가격 조회
+   * GET /api/v1/prices?symbols=005930.KS,NVDA,KRW-BTC  (콤마 구분, 생략 시 전체)
+   */
+  app.get('/', async (req, reply) => {
+    const rawSymbols = (req.query as Record<string, string>)['symbols']
+    const requestedSymbols = rawSymbols
+      ? rawSymbols.split(',').map((s) => s.trim()).filter(Boolean)
+      : []
+
+    const data =
+      requestedSymbols.length > 0
+        ? requestedSymbols.map((sym) => getPrice(sym)).filter((d): d is NonNullable<typeof d> => d !== undefined)
+        : getAllPrices()
+
+    return reply.send({ data, updatedAt: new Date().toISOString() })
+  })
+
   /**
    * 복수 종목 현재가 조회
    * 캐시 TTL: 3초 (장중) / 60초 (장 마감 후)
@@ -124,12 +161,14 @@ export async function priceRoutes(app: FastifyInstance) {
       )
 
       for (const row of rows.rows) {
+        const price = Number(row.price)
+        const stale = !isValidPrice(price)
         dbPrices[row.symbol] = {
           symbol: row.symbol,
-          price: Number(row.price),
+          price,
           ts: row.ts,
           assetType: row.asset_type,
-          stale: false,
+          stale,
         }
       }
 
@@ -186,12 +225,14 @@ export async function priceRoutes(app: FastifyInstance) {
 
       if (cached !== null && cached !== undefined) {
         const c = cached as Record<string, unknown>
+        const cachedPrice = typeof c['price'] === 'number' ? c['price'] : Number(c['price'] ?? 0)
+        const cachedStale = typeof c['stale'] === 'boolean' ? c['stale'] : false
         data[symbol] = {
           symbol,
-          price:      typeof c['price']      === 'number' ? c['price']      : Number(c['price'] ?? 0),
+          price:      cachedPrice,
           change:     typeof c['change']     === 'number' ? c['change']     : null,
           changeRate: typeof c['changeRate'] === 'number' ? c['changeRate'] : null,
-          stale:      typeof c['stale']      === 'boolean' ? c['stale']     : false,
+          stale:      cachedStale || !isValidPrice(cachedPrice),
           source:     'cache',
         }
       } else {
@@ -205,7 +246,7 @@ export async function priceRoutes(app: FastifyInstance) {
           price:      basePrice,
           change:     mockChange,
           changeRate: mockChangeRate,
-          stale:      false,
+          stale:      !isValidPrice(basePrice),
           source:     'mock',
         }
 
@@ -315,64 +356,38 @@ export async function priceRoutes(app: FastifyInstance) {
       })
     }
 
-    const [cached] = await Promise.all([
-      getPriceFromCache(app.redis, [symbol]),
-    ])
-
-    if (cached[symbol]) {
-      return reply.send({ data: cached[symbol] })
+    // 1순위: in-memory priceService (실시간 폴링 결과)
+    const livePrice = getPrice(symbol) ?? getPrice(`${symbol}.KS`)
+    if (livePrice) {
+      const data = {
+        symbol:     livePrice.symbol,
+        assetType:  livePrice.assetType,
+        price:      livePrice.price,
+        prevClose:  null,
+        change:     null,
+        changeRate: livePrice.changeRate,
+        ts:         livePrice.updatedAt,
+        stale:      false,
+      }
+      return reply.send({ data })
     }
 
-    // 캐시 미스: DB에서 현재가 + 전일 종가 동시 조회
-    const { rows } = await app.db.query(
-      `SELECT
-         t.symbol,
-         t.price       AS current_price,
-         t.ts          AS current_ts,
-         t.asset_type,
-         d.close       AS prev_close
-       FROM (
-         SELECT DISTINCT ON (symbol) symbol, price, ts, asset_type
-         FROM price_ticks
-         WHERE symbol = $1 AND is_valid = true
-         ORDER BY symbol, ts DESC
-       ) t
-       LEFT JOIN candles_1d d
-         ON d.symbol = $1
-        AND d.bucket = date_trunc('day', NOW()) - INTERVAL '1 day'`,
-      [symbol],
-    )
-
-    if (rows.length === 0) {
-      return reply.status(404).send({
-        statusCode: 404,
-        error: 'Not Found',
-        message: `종목 ${symbol}의 가격 정보를 찾을 수 없습니다.`,
-      })
+    // 2순위: Redis 캐시
+    try {
+      const [cached] = await Promise.all([
+        getPriceFromCache(app.redis, [symbol]),
+      ])
+      if (cached[symbol]) {
+        return reply.send({ data: cached[symbol] })
+      }
+    } catch {
+      // Redis 미연결 시 무시
     }
 
-    const row = rows[0]
-    const currentPrice = Number(row.current_price)
-    const prevClose = row.prev_close ? Number(row.prev_close) : null
-
-    const changeRate =
-      prevClose && prevClose > 0
-        ? ((currentPrice - prevClose) / prevClose) * 100
-        : null
-
-    const data = {
-      symbol: row.symbol,
-      assetType: row.asset_type,
-      price: currentPrice,
-      prevClose,
-      change: prevClose ? currentPrice - prevClose : null,
-      changeRate: changeRate ? Math.round(changeRate * 100) / 100 : null,
-      ts: row.current_ts,
-      stale: false,
-    }
-
-    await setPriceCache(app.redis, { [symbol]: data })
-
-    return reply.send({ data })
+    return reply.status(404).send({
+      statusCode: 404,
+      error: 'Not Found',
+      message: `종목 ${symbol}의 가격 정보를 찾을 수 없습니다.`,
+    })
   })
 }

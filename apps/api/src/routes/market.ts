@@ -26,7 +26,78 @@ const MOCK_KOSDAQ: IndexValue = { value: 871.54, change: -3.21, changeRate: -0.3
 const MOCK_BTC_DOMINANCE: IndexValue = { value: 52.3, change: 0.8, changeRate: 1.55 }
 
 const REDIS_KEY_BTC_DOMINANCE = 'market:btc_dominance'
+const REDIS_KEY_KOSPI = 'market:kospi'
+const REDIS_KEY_KOSDAQ = 'market:kosdaq'
 const BTC_DOMINANCE_TTL = 300 // 초
+const INDEX_TTL = 60 // 초
+
+// ─── 네이버 지수 조회 ─────────────────────────────────────────────────────
+
+const NAVER_INDEX_BASE = 'https://m.stock.naver.com/api/index'
+
+interface NaverIndexResponse {
+  closePrice: string
+  compareToPreviousClosePrice: string
+  fluctuationsRatio: string
+}
+
+async function fetchNaverIndex(code: 'KOSPI' | 'KOSDAQ'): Promise<IndexValue> {
+  const res = await fetch(`${NAVER_INDEX_BASE}/${code}/basic`, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (compatible; CoStock/1.0)',
+      Referer: 'https://m.stock.naver.com/',
+    },
+    signal: AbortSignal.timeout(5_000),
+  })
+
+  if (!res.ok) throw new Error(`네이버 ${code} 지수 조회 실패: HTTP ${res.status}`)
+
+  const data = (await res.json()) as NaverIndexResponse
+  return {
+    value: parseFloat(data.closePrice.replace(/,/g, '')),
+    change: parseFloat(data.compareToPreviousClosePrice.replace(/,/g, '')),
+    changeRate: parseFloat(data.fluctuationsRatio),
+  }
+}
+
+async function fetchKospiKosdaq(redis: FastifyInstance['redis']): Promise<{
+  kospi: IndexValue
+  kosdaq: IndexValue
+  source: 'live' | 'mock'
+}> {
+  // 캐시 확인
+  const [cachedKospi, cachedKosdaq] = await Promise.all([
+    redis.get(REDIS_KEY_KOSPI),
+    redis.get(REDIS_KEY_KOSDAQ),
+  ])
+
+  if (cachedKospi && cachedKosdaq) {
+    try {
+      return {
+        kospi: JSON.parse(cachedKospi) as IndexValue,
+        kosdaq: JSON.parse(cachedKosdaq) as IndexValue,
+        source: 'live',
+      }
+    } catch { /* 파싱 실패 시 새로 조회 */ }
+  }
+
+  try {
+    const [kospi, kosdaq] = await Promise.all([
+      fetchNaverIndex('KOSPI'),
+      fetchNaverIndex('KOSDAQ'),
+    ])
+
+    await Promise.all([
+      redis.setex(REDIS_KEY_KOSPI, INDEX_TTL, JSON.stringify(kospi)),
+      redis.setex(REDIS_KEY_KOSDAQ, INDEX_TTL, JSON.stringify(kosdaq)),
+    ])
+
+    return { kospi, kosdaq, source: 'live' }
+  } catch (err) {
+    logger.warn({ err }, '네이버 지수 조회 실패 — mock 반환')
+    return { kospi: MOCK_KOSPI, kosdaq: MOCK_KOSDAQ, source: 'mock' }
+  }
+}
 
 // ─── BTC 도미넌스 조회 ────────────────────────────────────────────────────
 
@@ -91,24 +162,26 @@ async function fetchBtcDominance(redis: FastifyInstance['redis']): Promise<Index
  *
  * 응답: { data: { kospi, kosdaq, btcDominance }, updatedAt, source }
  *
- * Phase 0: 코스피/코스닥은 KIS API 미승인으로 mock 반환
- * Phase 1: KIS API 연동 후 live 데이터 제공 예정
+ * 코스피/코스닥: KIS API 실데이터 (Redis TTL 60초, 실패 시 mock fallback)
+ * BTC 도미넌스: CoinGecko 실데이터 (Redis TTL 300초, 실패 시 mock fallback)
  */
 export async function marketRoutes(app: FastifyInstance) {
   app.get('/indices', async (_req, reply) => {
-    const btcDominance = await fetchBtcDominance(app.redis)
+    const [{ kospi, kosdaq, source: indexSource }, btcDominance] = await Promise.all([
+      fetchKospiKosdaq(app.redis),
+      fetchBtcDominance(app.redis),
+    ])
+
+    // BTC 도미넌스가 mock이면 전체 source를 mock으로 표시
+    const source: 'live' | 'mock' = indexSource === 'live' ? 'live' : 'mock'
 
     const response: MarketIndicesResponse = {
-      data: {
-        kospi: MOCK_KOSPI,
-        kosdaq: MOCK_KOSDAQ,
-        btcDominance,
-      },
+      data: { kospi, kosdaq, btcDominance },
       updatedAt: new Date().toISOString(),
-      source: 'mock',
+      source,
     }
 
-    reply.header('X-Data-Source', 'mock')
+    reply.header('X-Data-Source', source)
 
     return reply.send(response)
   })

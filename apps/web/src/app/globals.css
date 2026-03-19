@@ -1,11 +1,23 @@
-/* ─── Pretendard 폰트 ──────────────────────────────────────────────────────── */
-@import 'pretendard/dist/web/static/pretendard-dynamic-subset.css';
+/* ─── Pretendard 폰트 (CDN) ─────────────────────────────────────────────────── */
 
 /* ─── 한국 금융 색상 변수 ───────────────────────────────────────────────────── */
 :root {
   --kr-rise: #E84040;   /* 상승: 빨강 */
   --kr-fall: #2563EB;   /* 하락: 파랑 */
   --kr-flat: #6B7280;   /* 보합: 회색 */
+
+  /* ─── AI 트레이더 아이덴티티 색상 ──────────────────────────────────────── */
+  --trader-alpha: #6366F1;        /* 알파: 인디고 — 국내주식 모멘텀 */
+  --trader-alpha-bg: #EEF2FF;     /* 알파 배경 */
+  --trader-alpha-ring: rgba(99, 102, 241, 0.35);
+
+  --trader-beta: #F59E0B;         /* 베타: 앰버 — 코인 역추세 */
+  --trader-beta-bg: #FFFBEB;      /* 베타 배경 */
+  --trader-beta-ring: rgba(245, 158, 11, 0.35);
+
+  --trader-gamma: #10B981;        /* 감마: 에메랄드 — 미국주식 퀀트 */
+  --trader-gamma-bg: #ECFDF5;     /* 감마 배경 */
+  --trader-gamma-ring: rgba(16, 185, 129, 0.35);
 }
 
 /* ─── 기본 리셋 ────────────────────────────────────────────────────────────── */
@@ -43,6 +55,101 @@ body {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── 매수/매도 뱃지 ───────────────────────────────────────────────────────── */
+.badge-buy {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background-color: rgba(232, 64, 64, 0.10);
+  color: #E84040;
+  border: 1px solid rgba(232, 64, 64, 0.25);
+}
+
+.badge-sell {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background-color: rgba(37, 99, 235, 0.10);
+  color: #2563EB;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+}
+
+/* ─── 수익률 카운터 애니메이션 ──────────────────────────────────────────────── */
+@keyframes returnCountUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.return-counter {
+  animation: returnCountUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes returnFlashRise {
+  0%   { color: #E84040; }
+  60%  { color: #E84040; }
+  100% { color: inherit; }
+}
+
+@keyframes returnFlashFall {
+  0%   { color: #2563EB; }
+  60%  { color: #2563EB; }
+  100% { color: inherit; }
+}
+
+.return-flash-rise {
+  animation: returnFlashRise 0.8s ease-out;
+}
+
+.return-flash-fall {
+  animation: returnFlashFall 0.8s ease-out;
+}
+
+/* ─── 트레이드 피드 slide-in 애니메이션 ────────────────────────────────────── */
+@keyframes tradeFeedSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.trade-feed-item {
+  animation: tradeFeedSlideIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ─── 트레이더 pulse 링 ─────────────────────────────────────────────────────── */
+@keyframes traderPulseRing {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.55);
+    opacity: 0;
+  }
+}
+
+.trader-pulse-ring {
+  animation: traderPulseRing 1.6s ease-out infinite;
 }
 
 /* ─── 스크롤바 숨김 (가로 스크롤 영역용) ──────────────────────────────────── */
@@ -90,7 +197,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .price-flash-rise,
-  .price-flash-fall {
+  .price-flash-fall,
+  .animate-ticker {
     animation: none;
   }
 }
@@ -104,6 +212,12 @@ body {
 @keyframes ticker {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
+}
+
+/* PriceTicker marquee 유틸리티 — animation-duration은 인라인 스타일로 오버라이드 */
+.animate-ticker {
+  animation: ticker linear infinite;
+  will-change: transform;
 }
 
 .skeleton-shimmer {

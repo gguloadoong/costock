@@ -15,10 +15,14 @@ import { stockRoutes } from './routes/stock'
 import { searchRoutes } from './routes/search'
 import { marketRoutes } from './routes/market'
 import { newsRoutes } from './routes/news'
+import { traderRoutes, notificationRoutes } from './routes/traders'
 import { dbPlugin } from './plugins/db'
 import { redisPlugin } from './plugins/redis'
 import { errorHandler } from './middleware/errorHandler'
 import { logger } from './lib/logger'
+import { startTraderEngine, stopTraderEngine } from './lib/traderEngine'
+import { startPriceService, stopPriceService } from './lib/priceService'
+import { startNotificationService, stopNotificationService } from './lib/notificationService'
 
 const PORT = Number(process.env.PORT ?? 3000)
 const HOST = process.env.HOST ?? '0.0.0.0'
@@ -94,6 +98,8 @@ async function buildApp() {
   await app.register(searchRoutes, { prefix: '/api/v1/instruments' })
   await app.register(marketRoutes, { prefix: '/api/v1/market' })
   await app.register(newsRoutes, { prefix: '/api/v1' })
+  await app.register(traderRoutes, { prefix: '/api/v1/traders' })
+  await app.register(notificationRoutes, { prefix: '/api/v1/notifications' })
 
   // 헬스체크 (로드밸런서 타겟 그룹 헬스체크용)
   app.get('/health', { logLevel: 'silent' }, async () => {
@@ -134,6 +140,9 @@ async function buildApp() {
 async function start() {
   try {
     const server = await buildApp()
+    startPriceService()
+    startTraderEngine()
+    await startNotificationService()
 
     // JWT_SECRET 환경변수 미설정 시 기동 거부
     if (!process.env.JWT_SECRET) {
@@ -152,6 +161,9 @@ async function start() {
 // Graceful shutdown
 const shutdown = async (signal: string) => {
   logger.info(`${signal} 수신 — Graceful shutdown 시작`)
+  stopPriceService()
+  stopTraderEngine()
+  stopNotificationService()
   await app.close()
   logger.info('서버 종료 완료')
   process.exit(0)

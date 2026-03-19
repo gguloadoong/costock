@@ -25,6 +25,26 @@ self.addEventListener('activate', (event) => {
   self.clients.claim()
 })
 
+// Push: FCM Web Push 알림 수신
+self.addEventListener('push', (event) => {
+  const data = event.data?.json() ?? {}
+  event.waitUntil(
+    self.registration.showNotification(data.title ?? 'CoStock 알림', {
+      body: data.body,
+      icon: '/icon.svg',
+      badge: '/icon.svg',
+      data: data.data,
+    })
+  )
+})
+
+// NotificationClick: 알림 클릭 시 해당 URL 열기
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const url = event.notification.data?.url ?? '/'
+  event.waitUntil(clients.openWindow(url))
+})
+
 // Fetch: 네트워크 우선, 실패 시 캐시
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url)

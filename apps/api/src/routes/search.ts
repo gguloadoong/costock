@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { logger } from '../lib/logger'
+import { getPrice } from '../lib/priceService'
 
 // ─── 쿼리 스키마 ─────────────────────────────────────────────────────────
 
@@ -71,6 +72,12 @@ const KRX_STOCKS: Instrument[] = [
   { symbol: '009830', name: '한화솔루션', assetType: 'stock', exchange: 'KOSPI' },
   { symbol: '000810', name: '삼성화재', assetType: 'stock', exchange: 'KOSPI' },
   { symbol: '086280', name: '현대글로비스', assetType: 'stock', exchange: 'KOSPI' },
+  { symbol: '036570', name: 'NC소프트', assetType: 'stock', exchange: 'KOSPI' },
+  { symbol: '251270', name: '넷마블', assetType: 'stock', exchange: 'KOSPI' },
+  { symbol: '005490', name: 'POSCO홀딩스', assetType: 'stock', exchange: 'KOSPI' },
+  { symbol: '000720', name: '현대건설', assetType: 'stock', exchange: 'KOSPI' },
+  { symbol: '015760', name: '한국전력', assetType: 'stock', exchange: 'KOSPI' },
+  { symbol: '323280', name: '두나무', assetType: 'stock', exchange: 'KOSPI' },
   // 코스닥 주요 종목
   { symbol: '247540', name: '에코프로비엠', assetType: 'stock', exchange: 'KOSDAQ' },
   { symbol: '086520', name: '에코프로', assetType: 'stock', exchange: 'KOSDAQ' },
@@ -82,6 +89,7 @@ const KRX_STOCKS: Instrument[] = [
   { symbol: '293490', name: '카카오게임즈', assetType: 'stock', exchange: 'KOSDAQ' },
   { symbol: '259960', name: '크래프톤', assetType: 'stock', exchange: 'KOSDAQ' },
   { symbol: '112040', name: '위메이드', assetType: 'stock', exchange: 'KOSDAQ' },
+  { symbol: '226340', name: '비덴트', assetType: 'stock', exchange: 'KOSDAQ' },
 ]
 
 // ─── 주요 코인 목록 ──────────────────────────────────────────────────────
@@ -102,6 +110,9 @@ const CRYPTO_LIST: Instrument[] = [
   { symbol: 'KRW-ATOM', name: '코스모스', assetType: 'crypto', exchange: 'UPBIT' },
   { symbol: 'KRW-ETC', name: '이더리움클래식', assetType: 'crypto', exchange: 'UPBIT' },
   { symbol: 'KRW-BCH', name: '비트코인캐시', assetType: 'crypto', exchange: 'UPBIT' },
+  { symbol: 'KRW-SAND', name: '샌드박스', assetType: 'crypto', exchange: 'UPBIT' },
+  { symbol: 'KRW-MANA', name: '디센트럴랜드', assetType: 'crypto', exchange: 'UPBIT' },
+  { symbol: 'KRW-NEAR', name: '니어프로토콜', assetType: 'crypto', exchange: 'UPBIT' },
 ]
 
 // ─── 전체 목록 (주식 + 코인) ─────────────────────────────────────────────
@@ -165,13 +176,26 @@ export async function searchRoutes(app: FastifyInstance) {
 
     logger.debug({ q, count: results.length }, '통합 검색 실행')
 
-    const data: SearchResult[] = results.map((item) => ({
-      symbol: item.symbol,
-      name: item.name,
-      assetType: item.assetType,
-      market: item.exchange,
-      exchange: item.exchange,
-    }))
+    const data: SearchResult[] = results.map((item) => {
+      // priceService는 KR주식을 '005930.KS' 형태로 저장, 코인은 'KRW-BTC' 그대로
+      const priceSymbol = item.assetType === 'stock' && !item.symbol.includes('-')
+        ? `${item.symbol}.KS`
+        : item.symbol
+      const live = getPrice(priceSymbol) ?? getPrice(item.symbol)
+
+      const result: SearchResult = {
+        symbol: item.symbol,
+        name: item.name,
+        assetType: item.assetType,
+        market: item.exchange,
+        exchange: item.exchange,
+      }
+      if (live) {
+        result.currentPrice = live.price
+        result.changeRate    = live.changeRate
+      }
+      return result
+    })
 
     return reply.send({ data, meta: { total: data.length, query: q } })
   })
