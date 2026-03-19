@@ -1,0 +1,111 @@
+import { NextResponse } from 'next/server';
+
+const NEWS_DATA = [
+  {
+    id: '1',
+    title: '삼성전자, 2분기 영업이익 전망 상향 조정',
+    summary: 'HBM 수요 증가에 따른 반도체 실적 개선 기대',
+    source: '연합뉴스',
+    publishedAt: '2026-03-20T08:30:00.000Z',
+    url: '#',
+    symbols: ['005930'],
+    sentiment: 'positive',
+  },
+  {
+    id: '2',
+    title: '비트코인 9000만원 돌파 가능성 주목',
+    summary: '기관 투자자 유입 지속, 현물 ETF 자금 유입 증가',
+    source: '코인데스크',
+    publishedAt: '2026-03-20T07:15:00.000Z',
+    url: '#',
+    symbols: ['KRW-BTC'],
+    sentiment: 'positive',
+  },
+  {
+    id: '3',
+    title: 'NVIDIA 실적 발표 앞두고 반도체 섹터 주목',
+    summary: 'AI 수요 지속 성장, GPU 공급 부족 우려',
+    source: '블룸버그',
+    publishedAt: '2026-03-19T22:00:00.000Z',
+    url: '#',
+    symbols: ['NVDA'],
+    sentiment: 'neutral',
+  },
+  {
+    id: '4',
+    title: 'SK하이닉스, HBM3E 대량 양산 돌입',
+    summary: 'AI 서버용 고대역폭 메모리 수요 급증으로 수혜 기대',
+    source: '한국경제',
+    publishedAt: '2026-03-19T18:00:00.000Z',
+    url: '#',
+    symbols: ['000660'],
+    sentiment: 'positive',
+  },
+  {
+    id: '5',
+    title: '이더리움 네트워크 업그레이드 완료',
+    summary: '가스비 절감 및 처리 속도 개선으로 사용성 향상',
+    source: '디크립트',
+    publishedAt: '2026-03-19T14:00:00.000Z',
+    url: '#',
+    symbols: ['KRW-ETH'],
+    sentiment: 'positive',
+  },
+  {
+    id: '6',
+    title: '미 연준, 금리 동결 결정…인하 시그널 주목',
+    summary: '파월 의장 "경제 지표 지켜보겠다" 발언에 시장 주목',
+    source: 'Reuters',
+    publishedAt: '2026-03-19T10:00:00.000Z',
+    url: '#',
+    symbols: [],
+    sentiment: 'neutral',
+  },
+  {
+    id: '7',
+    title: 'KODEX 200 ETF, 외국인 순매수 지속',
+    summary: '한국 증시 저평가 매력에 외국인 자금 유입',
+    source: '매일경제',
+    publishedAt: '2026-03-19T09:00:00.000Z',
+    url: '#',
+    symbols: ['069500'],
+    sentiment: 'positive',
+  },
+  {
+    id: '8',
+    title: 'Apple, 새 AI 기능 탑재 아이폰 16e 출시',
+    summary: '중저가 라인업 AI 기능 확대로 점유율 회복 기대',
+    source: 'MacRumors',
+    publishedAt: '2026-03-18T20:00:00.000Z',
+    url: '#',
+    symbols: ['AAPL'],
+    sentiment: 'positive',
+  },
+  {
+    id: '9',
+    title: '원화 강세 전환…수출주 실적 영향 분석',
+    summary: '달러/원 1380원 하회, IT·자동차 섹터 수익성 검토',
+    source: '연합뉴스',
+    publishedAt: '2026-03-18T15:00:00.000Z',
+    url: '#',
+    symbols: ['005930', '000660'],
+    sentiment: 'negative',
+  },
+  {
+    id: '10',
+    title: '비트코인 채굴 난이도 역대 최고치 경신',
+    summary: '해시레이트 증가로 네트워크 보안성 강화',
+    source: '코인텔레그래프',
+    publishedAt: '2026-03-18T12:00:00.000Z',
+    url: '#',
+    symbols: ['KRW-BTC'],
+    sentiment: 'neutral',
+  },
+];
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const limit = Math.min(parseInt(searchParams.get('limit') ?? '10', 10), NEWS_DATA.length);
+
+  return NextResponse.json({ data: NEWS_DATA.slice(0, limit) });
+}
