@@ -1,17 +1,15 @@
 frontend:
   - changed-files:
-      - any-glob-to-any-file: 'apps/web/**'
+    - any-glob-to-any-file: ['src/**', 'public/**', '*.css', '*.html']
 
-backend:
+api:
   - changed-files:
-      - any-glob-to-any-file: 'apps/api/**'
-
-infra:
-  - changed-files:
-      - any-glob-to-any-file: 'infra/**'
+    - any-glob-to-any-file: ['api/**', 'server/**']
 
 docs:
   - changed-files:
-      - any-glob-to-any-file:
-          - '**/*.md'
-          - '.github/**'
+    - any-glob-to-any-file: ['**/*.md', '.github/**']
+
+config:
+  - changed-files:
+    - any-glob-to-any-file: ['*.config.*', '.env*', 'package.json', 'tsconfig*']
